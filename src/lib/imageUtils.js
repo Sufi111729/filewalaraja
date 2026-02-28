@@ -189,11 +189,16 @@ export async function buildResizedCanvas({ file, cropPixels, preset, onProgress 
   if (onProgress) onProgress(60);
 
   const resizedCanvas = drawHighQualityResize(cropCanvas, target.width, target.height);
-  const canvas = enhanceCanvasForClarity(resizedCanvas, preset);
-  const canvasCtx = canvas.getContext("2d");
-  canvasCtx.globalCompositeOperation = "destination-over";
-  canvasCtx.fillStyle = "#ffffff";
-  canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+  let preparedCanvas = resizedCanvas;
+  if (preset.id === "photo") {
+    try {
+      preparedCanvas = await removeBackgroundViaBackend(resizedCanvas);
+    } catch (_e) {
+      // Fallback keeps editor usable when backend is temporarily unavailable.
+      preparedCanvas = resizedCanvas;
+    }
+  }
+  const canvas = enhanceCanvasForClarity(preparedCanvas, preset);
 
   if (onProgress) onProgress(100);
 
@@ -267,8 +272,7 @@ export async function resizeAndCompressImage({
   file,
   cropPixels,
   preset,
-  onProgress,
-  autoWhiteBackground = true
+  onProgress
 }) {
   const start = performance.now();
   const image = await loadImageFromFile(file);
@@ -290,26 +294,17 @@ export async function resizeAndCompressImage({
   cropCtx.drawImage(image, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
 
   const resizedCanvas = drawHighQualityResize(cropCanvas, target.width, target.height);
-  const preparedCanvas =
-    preset.id === "photo" && autoWhiteBackground
-      ? resizedCanvas
-      : resizedCanvas;
-  if (preset.id === "photo" && autoWhiteBackground) {
+  let preparedCanvas = resizedCanvas;
+  if (preset.id === "photo") {
     try {
-      const bgRemoved = await removeBackgroundViaBackend(preparedCanvas);
-      preparedCanvas.width = bgRemoved.width;
-      preparedCanvas.height = bgRemoved.height;
-      const replaceCtx = preparedCanvas.getContext("2d");
-      replaceCtx.drawImage(bgRemoved, 0, 0);
+      // PAN photo background cleanup is handled by Spring Boot endpoint.
+      preparedCanvas = await removeBackgroundViaBackend(resizedCanvas);
     } catch (e) {
-      console.log("bg_remove_warning", e.message || "Background removal failed");
+      console.log("bg_remove_warning", e.message || "Background cleanup unavailable");
+      preparedCanvas = resizedCanvas;
     }
   }
   const canvas = enhanceCanvasForClarity(preparedCanvas, preset);
-  const canvasCtx = canvas.getContext("2d");
-  canvasCtx.globalCompositeOperation = "destination-over";
-  canvasCtx.fillStyle = "#ffffff";
-  canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
 
   if (onProgress) onProgress(35);
 

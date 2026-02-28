@@ -5,7 +5,6 @@ export default function ResizeCompressPanel({ file, cropPixels, preset, onProces
   const [progress, setProgress] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [autoWhiteBg, setAutoWhiteBg] = useState(true);
 
   const target = getPresetTargetPx(preset);
 
@@ -27,7 +26,6 @@ export default function ResizeCompressPanel({ file, cropPixels, preset, onProces
         file,
         cropPixels,
         preset,
-        autoWhiteBackground: autoWhiteBg,
         onProgress: setProgress
       });
       console.log("client_resize_ms", result.elapsedMs);
@@ -51,16 +49,6 @@ export default function ResizeCompressPanel({ file, cropPixels, preset, onProces
       <p className="text-xs text-slate-600">
         Target: {target.width}x{target.height}px, Max {preset.maxKb}KB
       </p>
-      {preset.id === "photo" ? (
-        <label className="mt-3 inline-flex items-center gap-2 text-xs text-slate-700">
-          <input
-            type="checkbox"
-            checked={autoWhiteBg}
-            onChange={(e) => setAutoWhiteBg(e.target.checked)}
-          />
-          Auto white background (photo)
-        </label>
-      ) : null}
       <button
         type="button"
         onClick={handleProcess}
@@ -76,7 +64,7 @@ export default function ResizeCompressPanel({ file, cropPixels, preset, onProces
         />
       </div>
       <p className="mt-2 text-xs text-slate-600">
-        Quality-safe compression enabled (photo keeps higher clarity first).
+        PAN photo background cleanup uses Spring Boot backend when available.
       </p>
       {error ? <p className="mt-2 rounded bg-rose-50 p-2 text-sm text-rose-700">{error}</p> : null}
     </div>
