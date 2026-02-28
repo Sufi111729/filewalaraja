@@ -8,5 +8,5 @@ Disallow: /auth
 Disallow: /auth.html
 Disallow: /api/
 
-Sitemap: https://filewalaraja.vercel.app/sitemap.xml
+Sitemap: https://filewalatool.vercel.app/sitemap.xml
 
