@@ -9,4 +9,3 @@ Disallow: /auth.html
 Disallow: /api/
 
 Sitemap: https://filewalatool.vercel.app/sitemap.xml
-
