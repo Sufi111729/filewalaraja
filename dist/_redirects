@@ -15,3 +15,11 @@
 /admin /admin-login.html 200
 /admin/login /admin-login.html 200
 /users /users.html 200
+/file-wala-tool / 301
+/filewala / 301
+/compress-pdf-to-300kb.html /compress-pdf-to-300kb 301
+/compress-pdf-to-300kb /compress-pdf-to-300kb.html 200
+/image-to-50kb /image-to-50kb.html 200
+/image-to-20kb /image-to-20kb.html 200
+/pan-photo-50kb /pan-photo-50kb.html 200
+/signature-20kb /signature-20kb.html 200

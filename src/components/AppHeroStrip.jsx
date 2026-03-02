@@ -6,11 +6,11 @@ export default function AppHeroStrip({ mode = "pan" }) {
     ? "PAN Card Photo and Signature Editor"
     : isHome
       ? "File Wala Tool"
-      : "KB Slider Image Editor";
+      : "File Converter Online for India Forms";
   const subtitle = isPan
     ? "Upload, crop, resize and export PAN-ready JPEG in a few clicks."
     : isHome
-      ? "Use one PAN Tool below to open PAN Card Editor, KB Editor, or ID Document."
+      ? "File Wala Tool (Filewala) for Sarkari forms, exam forms, and job portals: photo/signature resize, 20KB/50KB compression, and file conversion."
       : "Upload full image, set target KB, and export optimized JPEG with live preview.";
 
   return (

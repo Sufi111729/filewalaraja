@@ -3,6 +3,11 @@
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/convert", "destination": "/convert.html" },
+    { "source": "/image-to-50kb", "destination": "/image-to-50kb.html" },
+    { "source": "/image-to-20kb", "destination": "/image-to-20kb.html" },
+    { "source": "/pan-photo-50kb", "destination": "/pan-photo-50kb.html" },
+    { "source": "/signature-20kb", "destination": "/signature-20kb.html" },
+    { "source": "/compress-pdf-to-300kb", "destination": "/compress-pdf-to-300kb.html" },
     { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
   ],
   "redirects": [
@@ -27,7 +32,14 @@
     { "source": "/auth", "destination": "/auth.html", "permanent": true },
     { "source": "/admin", "destination": "/admin-login.html", "permanent": true },
     { "source": "/admin/login", "destination": "/admin-login.html", "permanent": true },
-    { "source": "/users", "destination": "/users.html", "permanent": true }
+    { "source": "/users", "destination": "/users.html", "permanent": true },
+    { "source": "/file-wala-tool", "destination": "/", "permanent": true },
+    { "source": "/filewala", "destination": "/", "permanent": true },
+    { "source": "/compress-pdf-to-300kb.html", "destination": "/compress-pdf-to-300kb", "permanent": true },
+    { "source": "/image-to-50kb.html", "destination": "/image-to-50kb", "permanent": true },
+    { "source": "/image-to-20kb.html", "destination": "/image-to-20kb", "permanent": true },
+    { "source": "/pan-photo-50kb.html", "destination": "/pan-photo-50kb", "permanent": true },
+    { "source": "/signature-20kb.html", "destination": "/signature-20kb", "permanent": true }
   ],
   "headers": [
     {

@@ -56,7 +56,12 @@ export default defineConfig(({ mode }) => {
           users: resolve(__dirname, "users.html"),
           panEditor: resolve(__dirname, "pan-editor.html"),
           kbEditor: resolve(__dirname, "kb-editor.html"),
-          documentValidator: resolve(__dirname, "document-validator.html")
+          documentValidator: resolve(__dirname, "document-validator.html"),
+          imageTo50kb: resolve(__dirname, "image-to-50kb.html"),
+          imageTo20kb: resolve(__dirname, "image-to-20kb.html"),
+          panPhoto50kb: resolve(__dirname, "pan-photo-50kb.html"),
+          signature20kb: resolve(__dirname, "signature-20kb.html"),
+          compressPdfTo300kb: resolve(__dirname, "compress-pdf-to-300kb.html")
         },
         output: {
           manualChunks(id) {

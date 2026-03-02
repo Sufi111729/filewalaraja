@@ -3,10 +3,15 @@ import { useEffect, useRef, useState } from "react";
 const NAV_CONFIG = {
   pan: { label: "PAN TOOL", href: "/?tab=pan-tool#pan-tool-suite" },
   photoTools: [
+    { label: "PAN Photo 50KB", href: "/pan-photo-50kb" },
     { label: "Crop & Resize", href: "/pan-editor.html?preset=photo" },
+    { label: "Signature 20KB", href: "/signature-20kb" },
     { label: "Signature Editor", href: "/pan-editor.html?preset=signature" }
   ],
   compress: [
+    { label: "Compress PDF 300KB", href: "/compress-pdf-to-300kb" },
+    { label: "Image to 50KB", href: "/image-to-50kb" },
+    { label: "Image to 20KB", href: "/image-to-20kb" },
     { label: "IMG KB Compress", href: "/kb-editor.html" },
     { label: "JPG Optimize", href: "/kb-editor.html" }
   ],
@@ -227,7 +232,7 @@ export default function TopNav({ showChips = false }) {
           </nav>
 
           <div className="flex items-center gap-2 md:justify-self-end">
-            <span className="hidden md:inline-flex h-10 items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700">
+            <span className="hidden md:inline-flex h-10 items-center rounded-lg border border-red-200 bg-red-50 px-3 text-sm font-semibold text-red-700">
               Open Access
             </span>
             <button
@@ -306,7 +311,7 @@ export default function TopNav({ showChips = false }) {
               ALL TOOLS
             </a>
 
-            <p className="px-3 py-1 text-xs font-medium text-emerald-700">Open access enabled</p>
+            <p className="px-3 py-1 text-xs font-medium text-red-700">Open access enabled</p>
           </div>
         </div>
       </div>

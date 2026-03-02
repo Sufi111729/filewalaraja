@@ -52,7 +52,7 @@ export default function AppModeNav({ mode = "pan" }) {
               type="button"
               onClick={() => setShowCompressTools((s) => !s)}
               className={`inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold transition ${
-                showCompressTools || isKb ? "text-emerald-700" : "text-slate-600 hover:text-slate-900"
+                showCompressTools || isKb ? "text-red-700" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               Compress
@@ -79,7 +79,7 @@ export default function AppModeNav({ mode = "pan" }) {
             <a
               href="/kb-editor.html"
               className={`px-3 py-2 text-sm font-semibold transition ${
-                isKb ? "text-emerald-700" : "text-slate-700 hover:text-slate-900"
+                isKb ? "text-red-700" : "text-slate-700 hover:text-slate-900"
               }`}
             >
               IMG KB Compress

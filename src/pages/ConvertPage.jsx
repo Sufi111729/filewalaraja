@@ -76,6 +76,8 @@ function resolveSelectedTool() {
 export default function ConvertPage() {
   const selectedKey = useMemo(() => resolveSelectedTool(), []);
   const selected = useMemo(() => TOOLS.find((t) => t.key === selectedKey) || null, [selectedKey]);
+  const imageFormatTools = useMemo(() => TOOLS.filter((tool) => tool.type === "image"), []);
+  const pdfTools = useMemo(() => TOOLS.filter((tool) => tool.type === "to-pdf"), []);
 
   return (
     <>
@@ -83,25 +85,46 @@ export default function ConvertPage() {
       <main className="mx-auto max-w-7xl p-4 md:p-6">
         <section className="mb-5 border-b border-slate-200 bg-white px-4 py-8 md:px-6 md:py-10">
           <div className="mx-auto max-w-4xl text-center">
-            <h1 className="text-2xl font-bold leading-tight text-slate-900 md:text-4xl">Convert Tools</h1>
+            <h1 className="text-2xl font-bold leading-tight text-slate-900 md:text-4xl">File Converter Online for India Forms</h1>
             <p className="mt-3 text-base text-slate-600 md:text-lg">
-              JPG to PNG, PNG to JPG, JPG to PDF, PNG to PDF, IMG to PDF - Fast frontend conversion.
+              Convert files online: JPG to PNG, PNG to JPG, JPG to PDF, PNG to PDF, and IMG to PDF. Optimized for Sarkari forms, exam forms, and job portal uploads.
             </p>
           </div>
         </section>
 
         {!selected ? (
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {TOOLS.map((tool) => (
-              <a
-                key={tool.id}
-                href={`/convert.html?tool=${tool.key}`}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <h2 className="text-lg font-semibold text-slate-900">{tool.title}</h2>
-                <p className="mt-2 text-sm text-slate-600">{tool.description}</p>
-              </a>
-            ))}
+          <section className="space-y-6">
+            <div>
+              <h2 className="mb-3 text-lg font-semibold text-slate-900">Image Format Converters</h2>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {imageFormatTools.map((tool) => (
+                  <a
+                    key={tool.id}
+                    href={`/convert.html?tool=${tool.key}`}
+                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <h3 className="text-lg font-semibold text-slate-900">{tool.title}</h3>
+                    <p className="mt-2 text-sm text-slate-600">{tool.description}</p>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h2 className="mb-3 text-lg font-semibold text-slate-900">PDF Converters</h2>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {pdfTools.map((tool) => (
+                  <a
+                    key={tool.id}
+                    href={`/convert.html?tool=${tool.key}`}
+                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <h3 className="text-lg font-semibold text-slate-900">{tool.title}</h3>
+                    <p className="mt-2 text-sm text-slate-600">{tool.description}</p>
+                  </a>
+                ))}
+              </div>
+            </div>
           </section>
         ) : (
           <section className="space-y-4">
@@ -120,6 +143,20 @@ export default function ConvertPage() {
             </Suspense>
           </section>
         )}
+
+        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
+          <h2 className="text-xl font-semibold text-slate-900">High-Intent File Converter Searches for India Form Users</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Core search terms: <strong>file converter online</strong>, <strong>jpg to pdf for form upload</strong>, <strong>image format change tool</strong>, <strong>sarkari form document converter</strong>, and <strong>exam form document converter</strong>.
+          </p>
+          <h3 className="mt-4 text-lg font-semibold text-slate-900">Related Size Tools</h3>
+          <p className="mt-2 text-sm text-slate-600">
+            Need both format conversion and file size control? Use <a className="font-medium text-red-600 hover:underline" href="/image-to-50kb">image to 50kb</a>,{" "}
+            <a className="font-medium text-red-600 hover:underline" href="/image-to-20kb">image to 20kb</a>,{" "}
+            <a className="font-medium text-red-600 hover:underline" href="/pan-photo-50kb">PAN photo 50kb</a>, and{" "}
+            <a className="font-medium text-red-600 hover:underline" href="/signature-20kb">signature 20kb</a>.
+          </p>
+        </section>
       </main>
       <AppFooter />
     </>

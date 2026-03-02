@@ -57,6 +57,82 @@ export const tools = [
     }
   },
   {
+    id: "compress-pdf-to-300kb",
+    title: "Compress PDF to 300KB",
+    description: "Reduce PDF size to 300KB exactly for SSC, PAN, and government form uploads.",
+    categoryId: "optimize",
+    href: "/compress-pdf-to-300kb",
+    icon: {
+      viewBox: "0 0 24 24",
+      paths: [
+        { d: "M7 3h7l4 4v14H7z", strokeWidth: 1.8, fill: "none" },
+        { d: "M14 3v4h4", strokeWidth: 1.8, fill: "none" },
+        { d: "M9 14h6", strokeWidth: 1.8, fill: "none" },
+        { d: "M12 10v8", strokeWidth: 1.8, fill: "none" }
+      ]
+    }
+  },
+  {
+    id: "image-to-50kb",
+    title: "Image to 50KB",
+    description: "Dedicated 50 kb image converter landing page for exact upload requirements.",
+    categoryId: "optimize",
+    href: "/image-to-50kb",
+    icon: {
+      viewBox: "0 0 24 24",
+      paths: [
+        { d: "M4 6h16v12H4z", strokeWidth: 1.8, fill: "none" },
+        { d: "M8 10h.01", strokeWidth: 2.5, fill: "none" },
+        { d: "M6 16l4-4 3 3 3-3 2 2", strokeWidth: 1.8, fill: "none" },
+        { d: "M9 4h6", strokeWidth: 1.8, fill: "none" }
+      ]
+    }
+  },
+  {
+    id: "image-to-20kb",
+    title: "Image to 20KB",
+    description: "Compress image to 20KB online for signatures and smaller form uploads.",
+    categoryId: "optimize",
+    href: "/image-to-20kb",
+    icon: {
+      viewBox: "0 0 24 24",
+      paths: [
+        { d: "M4 6h16v12H4z", strokeWidth: 1.8, fill: "none" },
+        { d: "M12 9v6", strokeWidth: 1.8, fill: "none" },
+        { d: "M9 12h6", strokeWidth: 1.8, fill: "none" }
+      ]
+    }
+  },
+  {
+    id: "pan-photo-50kb",
+    title: "PAN Photo 50KB",
+    description: "Resize and optimize PAN photo for 50KB size limits used by Indian portals.",
+    categoryId: "workflows",
+    href: "/pan-photo-50kb",
+    icon: {
+      viewBox: "0 0 24 24",
+      paths: [
+        { d: "M4 6h16v12H4z", strokeWidth: 1.8, fill: "none" },
+        { d: "M9 11a3 3 0 106 0 3 3 0 10-6 0", strokeWidth: 1.8, fill: "none" },
+        { d: "M8 17h8", strokeWidth: 1.8, fill: "none" }
+      ]
+    }
+  },
+  {
+    id: "signature-20kb",
+    title: "Signature 20KB",
+    description: "Create signature image at 20KB with better readability for online forms.",
+    categoryId: "workflows",
+    href: "/signature-20kb",
+    icon: {
+      viewBox: "0 0 24 24",
+      paths: [
+        { d: "M4 17c2 0 3-4 5-4s2 4 4 4 2-4 4-4 2 4 3 4", strokeWidth: 1.8, fill: "none" },
+        { d: "M4 7h16", strokeWidth: 1.8, fill: "none" }
+      ]
+    }
+  },
+  {
     id: "jpg-to-png",
     title: "JPG to PNG",
     description: "Convert JPG images into PNG format with clean output quality.",
