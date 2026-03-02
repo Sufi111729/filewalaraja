@@ -85,7 +85,9 @@ export async function smartCompressToKB(
       quality: Number(base.quality.toFixed(3)),
       ms: Math.round(performance.now() - start),
       finalKB: Number((base.blob.size / 1024).toFixed(2)),
-      hit: base.blob.size <= targetBytes
+      hit: base.blob.size <= targetBytes,
+      width: canvas.width,
+      height: canvas.height
     };
   }
 
@@ -104,7 +106,9 @@ export async function smartCompressToKB(
       quality: Number(minScaleFit.quality.toFixed(3)),
       ms: Math.round(performance.now() - start),
       finalKB: Number((minScaleFit.blob.size / 1024).toFixed(2)),
-      hit: minScaleFit.blob.size <= targetBytes
+      hit: minScaleFit.blob.size <= targetBytes,
+      width: minScaleCanvas.width,
+      height: minScaleCanvas.height
     };
   }
 
@@ -137,6 +141,8 @@ export async function smartCompressToKB(
     quality: Number(scaled.quality.toFixed(3)),
     ms: Math.round(performance.now() - start),
     finalKB: Number((scaled.blob.size / 1024).toFixed(2)),
-    hit: scaled.blob.size <= targetBytes
+    hit: scaled.blob.size <= targetBytes,
+    width: bestFitCanvas.width,
+    height: bestFitCanvas.height
   };
 }

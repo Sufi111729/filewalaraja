@@ -93,8 +93,8 @@ export default function KbStandaloneApp() {
     setFinalResult({
       blob,
       previewUrl: URL.createObjectURL(blob),
-      width: baseMeta?.width || 0,
-      height: baseMeta?.height || 0,
+      width: meta.width || baseMeta?.width || 0,
+      height: meta.height || baseMeta?.height || 0,
       targetKB: meta.targetKB,
       kb: meta.finalKB,
       quality: meta.quality,
@@ -151,7 +151,7 @@ export default function KbStandaloneApp() {
 
       {step === 2 ? (
         <section className="panel">
-          <h2 className="mb-3 text-sm font-semibold text-slate-700">Step 2: Adjust KB + Preview</h2>
+          <h2 className="mb-3 text-sm font-semibold text-slate-700">Step 2: Adjust KB + Generate + Preview</h2>
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <KbSliderEditor canvasRef={canvasRef} onResult={handleKbResult} />
@@ -161,12 +161,15 @@ export default function KbStandaloneApp() {
               <h3 className="text-sm font-semibold text-slate-700">Preview + Download</h3>
               {finalResult ? (
                 <>
-                  <img
-                    src={finalResult.previewUrl}
-                    alt="KB editor output"
-                    className="mx-auto mt-3 max-h-56 rounded-xl border border-slate-300 bg-white"
-                  />
+                  <div className="preview-frame">
+                    <img
+                      src={finalResult.previewUrl}
+                      alt="KB editor output"
+                      className="preview-image"
+                    />
+                  </div>
                   <div className="mt-3 grid gap-1 text-xs text-slate-700">
+                    <p>Preview Px: {finalResult.width}x{finalResult.height}</p>
                     <p>Target: {finalResult.targetKB} KB</p>
                     <p>Result: {finalResult.kb} KB</p>
                     <p>Quality: {finalResult.quality}</p>
@@ -182,16 +185,7 @@ export default function KbStandaloneApp() {
                   </button>
                 </>
               ) : (
-                <>
-                  {sourcePreviewUrl ? (
-                    <img
-                      src={sourcePreviewUrl}
-                      alt="Uploaded source"
-                      className="mx-auto mt-3 max-h-56 rounded-xl border border-slate-300 bg-white"
-                    />
-                  ) : null}
-                  <p className="mt-2 text-xs text-slate-500">Upload image and move KB slider to see preview.</p>
-                </>
+                <p className="mt-2 text-xs text-slate-500">Generate Final button dabane ke baad preview yahan dikhega.</p>
               )}
             </div>
           </div>

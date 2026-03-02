@@ -140,7 +140,6 @@ export default function TopNav({ showChips = false }) {
   const navRef = useRef(null);
   const [openMenu, setOpenMenu] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [accountEmail, setAccountEmail] = useState("");
   const [mobileAccordions, setMobileAccordions] = useState({
     photoTools: false,
     compress: false,
@@ -154,23 +153,6 @@ export default function TopNav({ showChips = false }) {
     setOpenMenu(null);
     setMobileOpen(false);
     setMobileAccordions({ photoTools: false, compress: false, convert: false });
-  };
-
-  const isLoggedIn = Boolean(accountEmail);
-
-  const syncAuth = () => {
-    if (typeof window === "undefined") return;
-    const token = localStorage.getItem("fwr_auth_token") || "";
-    const email = localStorage.getItem("fwr_auth_email") || "";
-    setAccountEmail(token ? email : "");
-  };
-
-  const onLogout = () => {
-    localStorage.removeItem("fwr_auth_token");
-    localStorage.removeItem("fwr_auth_email");
-    setAccountEmail("");
-    closeAll();
-    window.location.href = "/auth.html?mode=login";
   };
 
   useOutsideClick(navRef, () => setOpenMenu(null));
@@ -191,19 +173,10 @@ export default function TopNav({ showChips = false }) {
     };
   }, []);
 
-  useEffect(() => {
-    syncAuth();
-    function onStorage() {
-      syncAuth();
-    }
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
       <div ref={navRef} className="mx-auto max-w-7xl px-4">
-        <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <div className="flex h-16 items-center justify-between gap-3 md:grid md:grid-cols-[1fr_auto_1fr] md:justify-normal">
           <a href="/" className="inline-flex min-w-0 items-center">
             <img
               src="/logo-file-wala-raja.svg"
@@ -253,54 +226,10 @@ export default function TopNav({ showChips = false }) {
             </a>
           </nav>
 
-          <div className="justify-self-end flex items-center gap-2">
-            {isLoggedIn ? (
-              <div className="relative hidden md:block">
-                <button
-                  type="button"
-                  aria-haspopup="menu"
-                  aria-expanded={openMenu === "account"}
-                  aria-controls="account-menu"
-                  onClick={() => setOpenMenu((m) => (m === "account" ? null : "account"))}
-                  className="inline-flex h-10 items-center rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-800 transition-colors duration-150 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                >
-                  Account
-                </button>
-                {openMenu === "account" ? (
-                  <div
-                    id="account-menu"
-                    role="menu"
-                    className="absolute right-0 top-full z-50 mt-2 min-w-[240px] rounded-xl border border-slate-200 bg-white p-2 shadow-md"
-                  >
-                    <p className="px-2 py-1 text-xs font-medium text-slate-500">Logged in as</p>
-                    <p className="truncate px-2 pb-2 text-sm font-semibold text-slate-800">{accountEmail}</p>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={onLogout}
-                      className="w-full rounded-lg bg-red-500 px-3 py-2 text-left text-sm font-semibold text-white transition-colors hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-            ) : (
-              <>
-                <a
-                  href="/auth.html?mode=login"
-                  className="hidden text-sm font-semibold text-slate-800 transition-colors duration-150 hover:text-slate-900 md:inline"
-                >
-                  Login
-                </a>
-                <a
-                  href="/auth.html?mode=signup"
-                  className="hidden md:inline-flex h-10 items-center rounded-lg bg-red-500 px-4 text-sm font-semibold text-white transition-colors duration-150 hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
-                >
-                  Sign up
-                </a>
-              </>
-            )}
+          <div className="flex items-center gap-2 md:justify-self-end">
+            <span className="hidden md:inline-flex h-10 items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700">
+              Open Access
+            </span>
             <button
               type="button"
               className="hidden md:inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 transition-colors duration-150 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
@@ -309,22 +238,6 @@ export default function TopNav({ showChips = false }) {
               <AppsIcon />
             </button>
 
-            {isLoggedIn ? (
-              <button
-                type="button"
-                onClick={onLogout}
-                className="inline-flex md:hidden h-9 items-center rounded-lg bg-red-500 px-3 text-xs font-semibold text-white"
-              >
-                Logout
-              </button>
-            ) : (
-              <a
-                href="/auth.html?mode=signup"
-                className="inline-flex md:hidden h-9 items-center rounded-lg bg-red-500 px-3 text-xs font-semibold text-white"
-              >
-                Sign up
-              </a>
-            )}
             <button
               type="button"
               aria-label="Toggle mobile menu"
@@ -393,23 +306,7 @@ export default function TopNav({ showChips = false }) {
               ALL TOOLS
             </a>
 
-            {isLoggedIn ? (
-              <>
-                <p className="px-3 py-1 text-xs font-medium text-slate-500">Logged in as</p>
-                <p className="truncate px-3 pb-2 text-sm font-semibold text-slate-800">{accountEmail}</p>
-                <button
-                  type="button"
-                  onClick={onLogout}
-                  className="block w-full rounded-lg bg-red-500 px-3 py-2 text-left text-sm font-semibold text-white hover:bg-red-600"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <a href="/auth.html?mode=login" className="block rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">
-                Login
-              </a>
-            )}
+            <p className="px-3 py-1 text-xs font-medium text-emerald-700">Open access enabled</p>
           </div>
         </div>
       </div>

@@ -21,10 +21,6 @@ export default function UsersCrudApp() {
   const [form, setForm] = useState(initialForm);
 
   useEffect(() => {
-    if (localStorage.getItem("fwr_admin_session") !== "true") {
-      window.location.href = "/admin";
-      return;
-    }
     loadUsers();
   }, []);
 
@@ -115,11 +111,6 @@ export default function UsersCrudApp() {
     setForm(initialForm);
   };
 
-  const logoutAdmin = () => {
-    localStorage.removeItem("fwr_admin_session");
-    window.location.href = "/admin";
-  };
-
   return (
     <>
       <TopNav />
@@ -128,7 +119,7 @@ export default function UsersCrudApp() {
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="text-2xl font-bold leading-tight text-slate-900 md:text-4xl">User Management (CRUD)</h1>
             <p className="mt-3 text-base text-slate-600 md:text-lg">Create, update, list and delete users from frontend.</p>
-            <button type="button" className="btn-muted mt-3" onClick={logoutAdmin}>Admin Logout</button>
+            <p className="mt-2 text-sm font-medium text-emerald-700">Authentication disabled: anyone can access this page.</p>
           </div>
         </section>
 

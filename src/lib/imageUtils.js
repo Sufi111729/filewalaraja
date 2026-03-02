@@ -16,14 +16,6 @@ export const PRESETS = {
     maxKb: 50
   }
 };
-const RAW_API_BASE = (import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_BASE_URL || "").trim();
-const API_BASE =
-  RAW_API_BASE ||
-  (typeof window !== "undefined" &&
-  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-    ? "http://localhost:8080"
-    : "https://fielwalarajabackend.onrender.com");
-
 export function cmToPx(cm, dpi = 200) {
   return Math.round((cm / 2.54) * dpi);
 }
@@ -33,6 +25,10 @@ export function getPresetTargetPx(preset) {
     width: cmToPx(preset.widthCm, preset.dpi),
     height: cmToPx(preset.heightCm, preset.dpi)
   };
+}
+
+function clamp01(v) {
+  return Math.max(0, Math.min(1, v));
 }
 
 function loadImageFromFile(file) {
@@ -94,53 +90,6 @@ function drawHighQualityResize(sourceCanvas, targetWidth, targetHeight) {
   return finalCanvas;
 }
 
-function canvasToPngBlob(canvas) {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("PNG conversion failed"))), "image/png");
-  });
-}
-
-function loadImageFromBlob(blob) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(img);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Failed to load processed image"));
-    };
-    img.src = url;
-  });
-}
-
-async function removeBackgroundViaBackend(canvas) {
-  const inputBlob = await canvasToPngBlob(canvas);
-  const form = new FormData();
-  form.append("file", new File([inputBlob], "pan-photo.png", { type: "image/png" }));
-
-  const res = await fetch(`${API_BASE}/api/remove-bg-white`, {
-    method: "POST",
-    body: form
-  });
-  if (!res.ok) {
-    throw new Error("Background removal failed on server.");
-  }
-
-  const processedBlob = await res.blob();
-  const processedImage = await loadImageFromBlob(processedBlob);
-  const out = document.createElement("canvas");
-  out.width = processedImage.width;
-  out.height = processedImage.height;
-  const ctx = out.getContext("2d");
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(processedImage, 0, 0);
-  return out;
-}
-
 function enhanceCanvasForClarity(canvas, preset) {
   // Subtle enhancement for tiny PAN outputs to preserve perceived facial detail.
   if (preset.id !== "photo") return canvas;
@@ -189,16 +138,7 @@ export async function buildResizedCanvas({ file, cropPixels, preset, onProgress 
   if (onProgress) onProgress(60);
 
   const resizedCanvas = drawHighQualityResize(cropCanvas, target.width, target.height);
-  let preparedCanvas = resizedCanvas;
-  if (preset.id === "photo") {
-    try {
-      preparedCanvas = await removeBackgroundViaBackend(resizedCanvas);
-    } catch (_e) {
-      // Fallback keeps editor usable when backend is temporarily unavailable.
-      preparedCanvas = resizedCanvas;
-    }
-  }
-  const canvas = enhanceCanvasForClarity(preparedCanvas, preset);
+  const canvas = enhanceCanvasForClarity(resizedCanvas, preset);
 
   if (onProgress) onProgress(100);
 
@@ -272,7 +212,10 @@ export async function resizeAndCompressImage({
   file,
   cropPixels,
   preset,
-  onProgress
+  onProgress,
+  backgroundOptions,
+  enhancementOptions,
+  compressionOptions
 }) {
   const start = performance.now();
   const image = await loadImageFromFile(file);
@@ -294,31 +237,59 @@ export async function resizeAndCompressImage({
   cropCtx.drawImage(image, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
 
   const resizedCanvas = drawHighQualityResize(cropCanvas, target.width, target.height);
-  let preparedCanvas = resizedCanvas;
-  if (preset.id === "photo") {
-    try {
-      // PAN photo background cleanup is handled by Spring Boot endpoint.
-      preparedCanvas = await removeBackgroundViaBackend(resizedCanvas);
-    } catch (e) {
-      console.log("bg_remove_warning", e.message || "Background cleanup unavailable");
-      preparedCanvas = resizedCanvas;
-    }
-  }
-  const canvas = enhanceCanvasForClarity(preparedCanvas, preset);
+  let workingCanvas = resizedCanvas;
+  let proPreviewBeforeBlob = null;
+  let enhancePreviewBeforeBlob = null;
 
-  if (onProgress) onProgress(35);
+  if (enhancementOptions?.enabled) {
+    enhancePreviewBeforeBlob = await canvasToJpegBlob(resizedCanvas, 0.94);
+    if (onProgress) onProgress(18);
+    const { enhancePhotoCanvas } = await import("../features/photoEnhance/photoEnhance");
+    workingCanvas = await enhancePhotoCanvas(resizedCanvas, {
+      brightness: enhancementOptions.brightness,
+      contrast: enhancementOptions.contrast,
+      sharpness: enhancementOptions.sharpness,
+      denoise: enhancementOptions.denoise,
+      clarity: enhancementOptions.clarity,
+      onProgress: (enhanceProgress) => {
+        const progress = 18 + Math.round((enhanceProgress / 100) * 17);
+        if (onProgress) onProgress(progress);
+      }
+    });
+  }
+
+  if (backgroundOptions?.enabled) {
+    proPreviewBeforeBlob = await canvasToJpegBlob(workingCanvas, 0.94);
+    if (onProgress) onProgress(35);
+    const { makeBackgroundPureWhitePro } = await import("../features/bgWhitePro/bgWhitePro");
+    workingCanvas = await makeBackgroundPureWhitePro(workingCanvas, {
+      presetId: preset.id,
+      strength: backgroundOptions.strength,
+      edgeSmoothness: backgroundOptions.edgeSmoothness,
+      shadowRemoval: backgroundOptions.shadowRemoval ?? 60,
+      onProgress: (bgProgress) => {
+        const progress = 35 + Math.round((bgProgress / 100) * 15);
+        if (onProgress) onProgress(progress);
+      }
+    });
+  }
+
+  const canvas = enhanceCanvasForClarity(workingCanvas, preset);
+
+  if (onProgress) onProgress(50);
 
   const maxBytes = preset.maxKb * 1024;
   const minQuality = preset.id === "photo" ? 0.40 : 0.45;
+  const outputQuality = clamp01(compressionOptions?.outputQuality ?? 0.92);
   let activeCanvas = canvas;
   let compressed = await compressQualityBinarySearch(
     canvas,
     maxBytes,
     (step, total) => {
-      const progress = 35 + Math.round((step / total) * 60);
+      const progress = 50 + Math.round((step / total) * 45);
       if (onProgress) onProgress(progress);
     },
-    { minQuality, maxQuality: 0.98, maxIter: 12 }
+    { minQuality, maxQuality: outputQuality, maxIter: 12 }
   );
 
   // If strict 50KB cannot be achieved at minimum quality, reduce dimensions slightly
@@ -330,7 +301,7 @@ export async function resizeAndCompressImage({
         activeCanvas,
         maxBytes,
         () => {},
-        { minQuality, maxQuality: 0.98, maxIter: 10 }
+        { minQuality, maxQuality: outputQuality, maxIter: 10 }
       );
       if (compressed.withinLimit) break;
     }
@@ -340,6 +311,8 @@ export async function resizeAndCompressImage({
   return {
     blob: compressed.blob,
     previewUrl: URL.createObjectURL(compressed.blob),
+    proPreviewBeforeBlob,
+    enhancePreviewBeforeBlob,
     width: activeCanvas.width,
     height: activeCanvas.height,
     kb: Number((compressed.blob.size / 1024).toFixed(2)),

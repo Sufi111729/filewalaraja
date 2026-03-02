@@ -9,13 +9,15 @@ const DEBOUNCE_MS = 200;
 export default function KbSliderEditor({
   canvasRef,
   onResult,
+  onDirty,
   minKB = MIN_KB,
   maxKB = MAX_KB,
   defaultKB = DEFAULT_KB,
   minQBest = 0.2,
   minQSafer = 0.05,
   maxQ = 0.95,
-  maxIter = 8
+  maxIter = 8,
+  autoRun = false
 }) {
   const [targetKB, setTargetKB] = useState(defaultKB);
   const [mode, setMode] = useState("best");
@@ -70,6 +72,8 @@ export default function KbSliderEditor({
         quality: result.quality,
         ms: result.ms,
         hit: result.hit,
+        width: result.width,
+        height: result.height,
         mode
       };
       setStats(meta);
@@ -87,9 +91,27 @@ export default function KbSliderEditor({
   };
 
   useEffect(() => {
-    if (!canvas) return;
+    if (!autoRun || !canvas) return;
     runCompression(debouncedTarget);
-  }, [debouncedTarget, mode, canvas]);
+  }, [autoRun, debouncedTarget, mode, canvas]);
+
+  useEffect(() => {
+    if (!canvas) return;
+    setHasRun(false);
+    setStats({
+      targetKB,
+      finalKB: 0,
+      quality: 0,
+      ms: 0,
+      hit: false
+    });
+    if (onDirty) onDirty();
+  }, [canvas, targetKB]);
+
+  useEffect(() => {
+    if (!canvas) return;
+    if (onDirty) onDirty();
+  }, [canvas, mode]);
 
   return (
     <div className="panel">
@@ -164,6 +186,17 @@ export default function KbSliderEditor({
           </p>
         </div>
       </div>
+
+      {!autoRun ? (
+        <button
+          type="button"
+          className="btn-primary mt-3"
+          disabled={!canvas || busy}
+          onClick={() => runCompression(targetKB)}
+        >
+          {busy ? "Generating..." : "Generate Final"}
+        </button>
+      ) : null}
 
       {busy ? <p className="mt-3 text-xs text-blue-700">Compressing...</p> : null}
       {error ? <p className="mt-3 rounded bg-rose-50 p-2 text-xs text-rose-700">{error}</p> : null}

@@ -5,51 +5,16 @@ import TopNav from "./components/TopNav";
 import AppFooter from "./components/AppFooter";
 import { downloadBlob } from "./lib/imageUtils";
 
-function blobToDataUrl(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Failed to read blob."));
-    reader.readAsDataURL(blob);
-  });
-}
-
-async function convertJpegBlobToPdfBlob(jpegBlob, width, height) {
-  const { jsPDF } = await import(
-    /* @vite-ignore */ "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.es.min.js"
-  );
-  const dataUrl = await blobToDataUrl(jpegBlob);
-  const pdf = new jsPDF({
-    orientation: width >= height ? "landscape" : "portrait",
-    unit: "px",
-    format: [Math.max(1, Math.round(width)), Math.max(1, Math.round(height))],
-    compress: true
-  });
-  pdf.addImage(
-    dataUrl,
-    "JPEG",
-    0,
-    0,
-    Math.max(1, Math.round(width)),
-    Math.max(1, Math.round(height)),
-    undefined,
-    "FAST"
-  );
-  return pdf.output("blob");
-}
+const PDFJS_WORKER_CDN = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
 
 async function loadPdfModule() {
-  const localCandidates = [
-    "pdfjs-dist/build/pdf.mjs",
-    "pdfjs-dist/legacy/build/pdf.mjs"
-  ];
+  const localCandidates = ["pdfjs-dist/build/pdf.mjs", "pdfjs-dist/legacy/build/pdf.mjs"];
 
   for (const modPath of localCandidates) {
     try {
       const pdfjs = await import(/* @vite-ignore */ modPath);
       if (pdfjs?.GlobalWorkerOptions) {
-        pdfjs.GlobalWorkerOptions.workerSrc =
-          "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
+        pdfjs.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_CDN;
       }
       return pdfjs;
     } catch {
@@ -57,12 +22,15 @@ async function loadPdfModule() {
     }
   }
 
-  const pdfjs = await import(/* @vite-ignore */ "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.mjs");
-  if (pdfjs?.GlobalWorkerOptions) {
-    pdfjs.GlobalWorkerOptions.workerSrc =
-      "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
+  try {
+    const pdfjs = await import(/* @vite-ignore */ "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.mjs");
+    if (pdfjs?.GlobalWorkerOptions) {
+      pdfjs.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_CDN;
+    }
+    return pdfjs;
+  } catch {
+    throw new Error("PDF engine load failed. Check internet connection and try again.");
   }
-  return pdfjs;
 }
 
 async function buildCanvasFromPdf(file) {
@@ -70,11 +38,14 @@ async function buildCanvasFromPdf(file) {
   const pdfjs = await loadPdfModule();
   const data = new Uint8Array(await file.arrayBuffer());
 
-  const loadingTask = pdfjs.getDocument({ data, disableWorker: true });
+  const loadingTask = pdfjs.getDocument({ data });
   const pdf = await loadingTask.promise;
   const page = await pdf.getPage(1);
 
-  const viewport = page.getViewport({ scale: 2 });
+  const baseViewport = page.getViewport({ scale: 1 });
+  const longestEdge = Math.max(baseViewport.width, baseViewport.height);
+  const scale = Math.min(2, 2200 / Math.max(1, longestEdge));
+  const viewport = page.getViewport({ scale });
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(viewport.width);
   canvas.height = Math.round(viewport.height);
@@ -101,6 +72,7 @@ export default function DocumentStandaloneApp() {
   const [step, setStep] = useState(1);
   const [finalResult, setFinalResult] = useState(null);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [resultStale, setResultStale] = useState(false);
 
   const canvasRef = useRef(null);
 
@@ -155,6 +127,8 @@ export default function DocumentStandaloneApp() {
       return {
         blob,
         previewUrl: URL.createObjectURL(blob),
+        width: meta.width || baseMeta?.width || 0,
+        height: meta.height || baseMeta?.height || 0,
         targetKB: meta.targetKB,
         kb: meta.finalKB,
         quality: meta.quality,
@@ -162,13 +136,26 @@ export default function DocumentStandaloneApp() {
         hit: meta.hit
       };
     });
+    setResultStale(false);
+    setStep(3);
+  };
+
+  const handleKbDirty = () => {
+    if (!finalResult) return;
+    setResultStale(true);
+    setFinalResult((prev) => {
+      if (!prev) return prev;
+      if (prev.previewUrl) URL.revokeObjectURL(prev.previewUrl);
+      return null;
+    });
   };
 
   const handleDownloadPdf = async () => {
-    if (!finalResult || !baseMeta) return;
+    if (!finalResult) return;
     try {
       setPdfBusy(true);
-      const pdfBlob = await convertJpegBlobToPdfBlob(finalResult.blob, baseMeta.width, baseMeta.height);
+      const { convertJpegBlobToPdfBlob } = await import("./features/pdf/exportPdf");
+      const pdfBlob = await convertJpegBlobToPdfBlob(finalResult.blob, finalResult.width, finalResult.height);
       downloadBlob(pdfBlob, `scanned-doc-${Date.now()}.pdf`);
     } finally {
       setPdfBusy(false);
@@ -213,7 +200,7 @@ export default function DocumentStandaloneApp() {
             }`}
           >
             <p className="text-xs uppercase tracking-wide">Step 2</p>
-            <p className="mt-1 font-semibold">KB Edit</p>
+            <p className="mt-1 font-semibold">KB Edit + Generate</p>
           </div>
           <div
             className={`rounded-lg border bg-white px-3 py-3 ${
@@ -244,9 +231,11 @@ export default function DocumentStandaloneApp() {
                 PDF page prepared: {baseMeta.width}x{baseMeta.height}px in {baseMeta.ms}ms
               </p>
             ) : null}
+            <p className="text-xs text-slate-500">Target KB set karke Generate Final dabayein. Success par preview auto open hoga.</p>
             <KbSliderEditor
               canvasRef={canvasRef}
               onResult={handleKbResult}
+              onDirty={handleKbDirty}
               minKB={50}
               maxKB={1000}
               defaultKB={300}
@@ -259,10 +248,12 @@ export default function DocumentStandaloneApp() {
               <button type="button" className="btn-muted" onClick={() => setStep(1)}>
                 Back
               </button>
-              <button type="button" className="btn-primary" disabled={!finalResult} onClick={() => setStep(3)}>
-                Next: Preview
-              </button>
             </div>
+            {resultStale ? (
+              <p className="rounded bg-amber-50 p-2 text-xs text-amber-700">
+                KB settings badle gaye hain. Latest preview ke liye dubara Generate Final dabayein.
+              </p>
+            ) : null}
           </section>
         ) : null}
 
@@ -271,12 +262,15 @@ export default function DocumentStandaloneApp() {
             <h2 className="text-sm font-semibold text-slate-700">Preview + Download</h2>
             {finalResult ? (
               <>
-                <img
-                  src={finalResult.previewUrl}
-                  alt="Converted scanned document"
-                  className="mx-auto mt-3 max-h-64 rounded-xl border border-slate-300 bg-white"
-                />
+                <div className="preview-frame">
+                  <img
+                    src={finalResult.previewUrl}
+                    alt="Converted scanned document"
+                    className="preview-image"
+                  />
+                </div>
                 <div className="mt-3 grid gap-1 text-xs text-slate-700 sm:grid-cols-2">
+                  <p>Preview Px: {finalResult.width}x{finalResult.height}</p>
                   <p>Target: {finalResult.targetKB} KB</p>
                   <p>Result: {finalResult.kb} KB</p>
                   <p>Quality: {finalResult.quality}</p>
@@ -289,7 +283,7 @@ export default function DocumentStandaloneApp() {
                   onClick={handleDownloadPdf}
                   disabled={pdfBusy}
                 >
-                  {pdfBusy ? "Preparing PDF..." : "Download PDF"}
+                  {pdfBusy ? "Generating PDF..." : "Download PDF"}
                 </button>
               </>
             ) : (

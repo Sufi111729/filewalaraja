@@ -8,6 +8,7 @@ import TopNav from "./components/TopNav";
 import AppHeroStrip from "./components/AppHeroStrip";
 import AppFooter from "./components/AppFooter";
 import { PRESETS } from "./lib/imageUtils";
+import { useAiHealth } from "./store/aiHealthStore";
 
 export default function PanEditorStandaloneApp() {
   const [file, setFile] = useState(null);
@@ -16,13 +17,13 @@ export default function PanEditorStandaloneApp() {
   const [result, setResult] = useState(null);
   const [step, setStep] = useState(1);
   const preset = useMemo(() => PRESETS[presetId], [presetId]);
+  const { checkHealth } = useAiHealth();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const presetParam = params.get("preset");
     if (presetParam === "photo" || presetParam === "signature") {
       setPresetId(presetParam);
-      setStep(2);
     }
   }, []);
 
@@ -39,6 +40,11 @@ export default function PanEditorStandaloneApp() {
   };
 
   const goToStep3 = () => {
+    if (!file) {
+      setStep(1);
+      return;
+    }
+    checkHealth();
     setStep(3);
   };
 

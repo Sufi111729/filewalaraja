@@ -2,9 +2,16 @@
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/robots.txt", "destination": "/robots.txt" },
-    { "source": "/convert", "destination": "/convert.html" }
+    { "source": "/convert", "destination": "/convert.html" },
+    { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
   ],
   "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "filewalatool.vercel.app" }],
+      "destination": "https://filewalatool.com/:path*",
+      "permanent": true
+    },
     { "source": "/jpg-to-png", "destination": "/convert?tool=jpg-to-png", "permanent": true },
     { "source": "/png-to-jpg", "destination": "/convert?tool=png-to-jpg", "permanent": true },
     { "source": "/jpg-to-pdf", "destination": "/convert?tool=jpg-to-pdf", "permanent": true },

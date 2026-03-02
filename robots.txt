@@ -1,4 +1,4 @@
-User-agent: *
+﻿User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /admin/
@@ -8,4 +8,4 @@ Disallow: /auth
 Disallow: /auth.html
 Disallow: /api/
 
-Sitemap: https://filewalatool.vercel.app/sitemap.xml
+Sitemap: https://filewalatool.com/sitemap.xml

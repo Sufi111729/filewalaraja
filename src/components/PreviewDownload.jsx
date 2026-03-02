@@ -1,14 +1,5 @@
-import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
-import { downloadBlob } from "../lib/imageUtils";
-
-const rawApiBase = (import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_BASE_URL || "").trim();
-const apiBase =
-  rawApiBase ||
-  (typeof window !== "undefined" &&
-  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-    ? "http://localhost:8080"
-    : "https://fielwalarajabackend.onrender.com");
+import { PRESETS, downloadBlob, getPresetTargetPx } from "../lib/imageUtils";
 
 export default function PreviewDownload({ result, presetId }) {
   const [validateState, setValidateState] = useState({
@@ -34,28 +25,69 @@ export default function PreviewDownload({ result, presetId }) {
     const start = performance.now();
 
     try {
-      const form = new FormData();
-      form.append("file", new File([result.blob], filename, { type: "image/jpeg" }));
-      form.append("presetId", presetId);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const preset = PRESETS[presetId];
+      if (!preset) throw new Error("Unknown preset.");
+      const target = getPresetTargetPx(preset);
 
-      const res = await axios.post(`${apiBase}/api/validate`, form, { timeout: 12000 });
+      const errors = [];
+      const warnings = [];
+
+      if (result.width !== target.width || result.height !== target.height) {
+        errors.push({
+          code: "DIMENSION_MISMATCH",
+          message: `Expected ${target.width}x${target.height}px but got ${result.width}x${result.height}px`
+        });
+      }
+
+      if (result.kb > preset.maxKb) {
+        errors.push({
+          code: "SIZE_LIMIT_EXCEEDED",
+          message: `Expected <= ${preset.maxKb}KB but got ${result.kb}KB`
+        });
+      }
+
+      if (!result.withinLimit) {
+        warnings.push({
+          code: "QUALITY_FLOOR_HIT",
+          message: "Target size met with limited quality controls."
+        });
+      }
+
+      const data = {
+        ok: errors.length === 0,
+        source: "client",
+        presetId,
+        checkedAt: new Date().toISOString(),
+        checks: {
+          expectedWidth: target.width,
+          expectedHeight: target.height,
+          actualWidth: result.width,
+          actualHeight: result.height,
+          maxKb: preset.maxKb,
+          actualKb: result.kb,
+          jpegQuality: result.quality
+        },
+        errors,
+        warnings
+      };
       const elapsed = Math.round(performance.now() - start);
 
-      console.log("backend_validate_ms", elapsed);
-      console.log("backend_validate_ok", !!res.data?.ok);
-      console.log("backend_error_codes", (res.data?.errors || []).map((e) => e.code));
+      console.log("frontend_validate_ms", elapsed);
+      console.log("frontend_validate_ok", !!data.ok);
+      console.log("frontend_error_codes", (data.errors || []).map((e) => e.code));
 
-      setValidateState((s) => ({ ...s, loading: false, data: res.data }));
+      setValidateState((s) => ({ ...s, loading: false, data }));
     } catch (e) {
       const elapsed = Math.round(performance.now() - start);
-      console.log("backend_validate_ms", elapsed);
-      console.log("backend_validate_ok", false);
-      console.log("backend_error_codes", ["BACKEND_UNAVAILABLE"]);
+      console.log("frontend_validate_ms", elapsed);
+      console.log("frontend_validate_ok", false);
+      console.log("frontend_error_codes", ["VALIDATION_FAILED"]);
 
       setValidateState((s) => ({
         ...s,
         loading: false,
-        warning: "Backend not reachable (possibly cold start). Download is still available."
+        warning: e instanceof Error ? e.message : "Validation failed."
       }));
     }
   };
@@ -63,13 +95,15 @@ export default function PreviewDownload({ result, presetId }) {
   return (
     <div className="panel">
       <h2 className="mb-3 text-sm font-semibold text-slate-700">Preview + Download</h2>
-      <img
-        src={result.previewUrl}
-        alt="Final output"
-        className="mx-auto max-h-44 rounded-xl border border-slate-300 bg-white"
-      />
+      <div className="preview-frame mt-0">
+        <img
+          src={result.previewUrl}
+          alt="Final output"
+          className="preview-image"
+        />
+      </div>
       <div className="mt-3 grid gap-1 text-xs text-slate-700">
-        <p>Target Px: {result.width}x{result.height}</p>
+        <p>Preview Px: {result.width}x{result.height}</p>
         <p>Final Size: {result.kb} KB</p>
         <p>JPEG Quality Used: {result.quality}</p>
       </div>
@@ -94,7 +128,7 @@ export default function PreviewDownload({ result, presetId }) {
           disabled={validateState.called || validateState.loading}
           onClick={handleValidate}
         >
-          {validateState.loading ? "Validating..." : "Validate Final (Optional)"}
+          {validateState.loading ? "Validating..." : "Validate Final (Client-side)"}
         </button>
       </div>
 

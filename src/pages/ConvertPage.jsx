@@ -1,6 +1,8 @@
+import { lazy, Suspense, useMemo } from "react";
 import TopNav from "../components/TopNav";
 import AppFooter from "../components/AppFooter";
-import ConverterCard from "../components/ConverterCard";
+
+const ConverterCard = lazy(() => import("../components/ConverterCard"));
 
 const TOOLS = [
   {
@@ -72,8 +74,8 @@ function resolveSelectedTool() {
 }
 
 export default function ConvertPage() {
-  const selectedKey = resolveSelectedTool();
-  const selected = TOOLS.find((t) => t.key === selectedKey) || null;
+  const selectedKey = useMemo(() => resolveSelectedTool(), []);
+  const selected = useMemo(() => TOOLS.find((t) => t.key === selectedKey) || null, [selectedKey]);
 
   return (
     <>
@@ -106,14 +108,16 @@ export default function ConvertPage() {
             <a href="/convert.html" className="inline-flex rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
               Back to all converters
             </a>
-            <ConverterCard
-              title={selected.title}
-              description={selected.description}
-              accept={selected.accept}
-              type={selected.type}
-              targetMime={selected.targetMime}
-              targetExt={selected.targetExt}
-            />
+            <Suspense fallback={<div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">Loading converter...</div>}>
+              <ConverterCard
+                title={selected.title}
+                description={selected.description}
+                accept={selected.accept}
+                type={selected.type}
+                targetMime={selected.targetMime}
+                targetExt={selected.targetExt}
+              />
+            </Suspense>
           </section>
         )}
       </main>
