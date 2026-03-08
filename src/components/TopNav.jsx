@@ -157,50 +157,53 @@ function MobileMenu({ open, closeAll }) {
   }, [open]);
 
   return (
-    <div className={`fixed inset-0 top-16 z-40 bg-slate-900/20 backdrop-blur-sm transition-all duration-200 md:hidden ${open ? "visible opacity-100" : "invisible opacity-0 pointer-events-none"}`}>
-      <div className="mx-auto h-full max-w-[460px] px-3 pb-4 pt-3">
-        <div className="h-full overflow-y-auto rounded-2xl border border-slate-200/90 bg-slate-50 p-3 shadow-2xl">
-          <a href="/" onClick={closeAll} className="block rounded-xl border border-slate-200 bg-white px-4 py-3 text-[17px] font-semibold text-slate-900 shadow-sm">
-            Home
-          </a>
-          <div className="mt-2 space-y-2">
-            {Object.entries(NAV).map(([key, section]) => (
-              <div key={key} className="rounded-xl border border-slate-200 bg-white shadow-sm">
-                <button
-                  type="button"
-                  aria-expanded={openAccordions[key]}
-                  aria-controls={`mobile-${key}`}
-                  onClick={() => setOpenAccordions((prev) => ({ ...prev, [key]: !prev[key] }))}
-                  className="flex w-full items-center justify-between px-4 py-3 text-left text-[17px] font-semibold text-slate-800"
-                >
-                  <span className="inline-flex items-center gap-2.5">
-                    {sectionIcon(key)}
-                    {section.label}
-                  </span>
-                  <ChevronDownIcon className={`h-4 w-4 transition-transform duration-200 ${openAccordions[key] ? "rotate-180" : ""}`} />
-                </button>
-                <div id={`mobile-${key}`} className={`overflow-hidden transition-all duration-200 ${openAccordions[key] ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
-                  <div className="space-y-1 border-t border-slate-100 p-2">
-                    {section.items.map((item) => (
-                      <a
-                        key={item.label}
-                        href={item.href}
-                        onClick={closeAll}
-                        className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
-                      >
-                        {navItemIcon(item.label)}
-                        {item.label}
-                      </a>
-                    ))}
+    <div className={`fixed inset-0 z-[60] md:hidden ${open ? "visible opacity-100" : "invisible opacity-0 pointer-events-none"}`}>
+      <div onClick={closeAll} className="absolute inset-0 bg-slate-900/30 backdrop-blur-[2px]" />
+      <div className="absolute inset-x-0 top-16 bottom-0 overflow-y-auto">
+        <div className="mx-auto max-w-[460px] px-3 py-3 pb-6">
+          <div onClick={(e) => e.stopPropagation()} className="rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-2xl">
+            <a href="/" onClick={closeAll} className="block rounded-xl border border-slate-200 bg-white px-4 py-3 text-[17px] font-semibold text-slate-900 shadow-sm">
+              Home
+            </a>
+            <div className="mt-2 space-y-2">
+              {Object.entries(NAV).map(([key, section]) => (
+                <div key={key} className="rounded-xl border border-slate-200 bg-white shadow-sm">
+                  <button
+                    type="button"
+                    aria-expanded={openAccordions[key]}
+                    aria-controls={`mobile-${key}`}
+                    onClick={() => setOpenAccordions((prev) => ({ ...prev, [key]: !prev[key] }))}
+                    className="flex w-full items-center justify-between px-4 py-3 text-left text-[17px] font-semibold text-slate-800"
+                  >
+                    <span className="inline-flex items-center gap-2.5">
+                      {sectionIcon(key)}
+                      {section.label}
+                    </span>
+                    <ChevronDownIcon className={`h-4 w-4 transition-transform duration-200 ${openAccordions[key] ? "rotate-180" : ""}`} />
+                  </button>
+                  <div id={`mobile-${key}`} className={`overflow-hidden transition-all duration-200 ${openAccordions[key] ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
+                    <div className="space-y-1 border-t border-slate-100 p-2">
+                      {section.items.map((item) => (
+                        <a
+                          key={item.label}
+                          href={item.href}
+                          onClick={closeAll}
+                          className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                        >
+                          {navItemIcon(item.label)}
+                          {item.label}
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          <div className="sticky bottom-0 mt-3 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent pt-3">
-            <a href="/?tab=all#pan-tool-suite" onClick={closeAll} className="btn-primary w-full">
-              Browse All Tools
-            </a>
+              ))}
+            </div>
+            <div className="mt-3">
+              <a href="/?tab=all#pan-tool-suite" onClick={closeAll} className="btn-primary w-full">
+                Browse All Tools
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -222,10 +225,18 @@ export default function TopNav() {
   };
 
   useEffect(() => {
+    const MOBILE_BREAKPOINT = 768;
     function onKey(e) {
       if (e.key === "Escape") closeAll();
     }
     function onScroll() {
+      if (window.innerWidth < MOBILE_BREAKPOINT || mobileOpen) {
+        setNavVisible(true);
+        setScrolled(window.scrollY > 6);
+        lastScrollRef.current = window.scrollY;
+        return;
+      }
+
       const currentY = window.scrollY;
       setScrolled(currentY > 6);
 
@@ -245,16 +256,18 @@ export default function TopNav() {
     }
     window.addEventListener("keydown", onKey);
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
     document.addEventListener("mousedown", onOutside);
     document.addEventListener("touchstart", onOutside);
     onScroll();
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
       document.removeEventListener("mousedown", onOutside);
       document.removeEventListener("touchstart", onOutside);
     };
-  }, []);
+  }, [mobileOpen]);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
@@ -265,36 +278,37 @@ export default function TopNav() {
   }, [mobileOpen]);
 
   return (
-    <header
-      style={{ transform: navVisible ? "translateY(0)" : "translateY(-110%)" }}
-      className={`sticky top-0 z-50 border-b transition-all duration-200 ${scrolled ? "border-slate-200/90 bg-white/92 shadow-sm backdrop-blur" : "border-slate-200/70 bg-white/84 backdrop-blur"}`}
-    >
-      <div ref={navRef} className="mx-auto max-w-[1180px] px-4 md:px-6">
-        <div className="flex h-16 items-center justify-between gap-4">
-          <a href="/" className="inline-flex items-center gap-2">
-            <img src="/file-wala-tool-logo.svg" alt="File Wala Tool logo" className="h-8 w-auto" loading="eager" />
-          </a>
-
-          <DesktopMenu openKey={openKey} setOpenKey={setOpenKey} closeAll={closeAll} />
-
-          <div className="flex items-center gap-2">
-            <a href="/?tab=all#pan-tool-suite" className="btn-muted hidden h-10 px-3 text-xs md:inline-flex">
-              All Tools
+    <>
+      <header
+        style={{ transform: navVisible ? "translateY(0)" : "translateY(-110%)" }}
+        className={`sticky top-0 z-50 border-b transition-all duration-200 ${scrolled ? "border-slate-200/90 bg-white/92 shadow-sm backdrop-blur" : "border-slate-200/70 bg-white/84 backdrop-blur"}`}
+      >
+        <div ref={navRef} className="mx-auto max-w-[1180px] px-4 md:px-6">
+          <div className="flex h-16 items-center justify-between gap-4">
+            <a href="/" className="inline-flex items-center gap-2">
+              <img src="/file-wala-tool-logo.svg" alt="File Wala Tool logo" className="h-8 w-auto" loading="eager" />
             </a>
-            <button
-              type="button"
-              aria-label="Toggle mobile menu"
-              aria-expanded={mobileOpen}
-              onClick={() => setMobileOpen((v) => !v)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 text-slate-700 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 md:hidden"
-            >
-              {mobileOpen ? <CloseIcon /> : <MenuIcon />}
-            </button>
+
+            <DesktopMenu openKey={openKey} setOpenKey={setOpenKey} closeAll={closeAll} />
+
+            <div className="flex items-center gap-2">
+              <a href="/?tab=all#pan-tool-suite" className="btn-muted hidden h-10 px-3 text-xs md:inline-flex">
+                All Tools
+              </a>
+              <button
+                type="button"
+                aria-label="Toggle mobile menu"
+                aria-expanded={mobileOpen}
+                onClick={() => setMobileOpen((v) => !v)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 text-slate-700 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 md:hidden"
+              >
+                {mobileOpen ? <CloseIcon /> : <MenuIcon />}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-
+      </header>
       <MobileMenu open={mobileOpen} closeAll={closeAll} />
-    </header>
+    </>
   );
 }
