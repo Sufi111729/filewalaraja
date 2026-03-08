@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { CloudUploadIcon, UploadIcon } from "./AppIcons";
 
 const MAX_MB = 5;
 
@@ -35,7 +36,7 @@ export default function DocumentUploadPanel({ onReady }) {
 
   return (
     <div
-      className="panel min-h-[300px] border-2 border-dashed border-slate-300 text-center"
+      className="panel upload-zone min-h-[300px] text-center"
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();
@@ -43,8 +44,9 @@ export default function DocumentUploadPanel({ onReady }) {
       }}
     >
       <div className="flex h-full flex-col items-center justify-center py-6">
+        <CloudUploadIcon className="mx-auto h-10 w-10 text-slate-400" />
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Scanned PDF Input</p>
-        <p className="mt-2 text-sm text-slate-700">Drag and drop PDF here</p>
+        <p className="mt-2 text-sm font-medium text-slate-700">Drag and drop PDF here</p>
         <p className="mt-1 text-xs text-slate-500">Upload PDF up to 5MB, then convert to target 50KB to 1000KB.</p>
 
         {file ? (
@@ -55,7 +57,8 @@ export default function DocumentUploadPanel({ onReady }) {
           </div>
         ) : null}
 
-        <button type="button" onClick={() => inputRef.current?.click()} className="btn-muted mt-4">
+        <button type="button" onClick={() => inputRef.current?.click()} className="btn-muted mt-4 inline-flex items-center gap-2">
+          <UploadIcon className="h-4 w-4" />
           {file ? "Change PDF" : "Choose PDF"}
         </button>
         <input

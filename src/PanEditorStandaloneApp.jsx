@@ -59,7 +59,7 @@ export default function PanEditorStandaloneApp() {
   return (
     <>
       <TopNav />
-      <main className="mx-auto max-w-7xl p-4 md:p-6">
+      <main className="app-main">
         <AppHeroStrip mode="pan" />
 
         <div className="mb-5 grid gap-3 text-sm sm:grid-cols-3">
@@ -85,7 +85,7 @@ export default function PanEditorStandaloneApp() {
             }`}
           >
             <p className="text-xs uppercase tracking-wide">Step 3</p>
-            <p className="mt-1 font-semibold">Editor</p>
+            <p className="mt-1 font-semibold">Resizer</p>
           </div>
         </div>
 
@@ -122,7 +122,7 @@ export default function PanEditorStandaloneApp() {
                   onClick={goToStep3}
                   className="btn-primary"
                 >
-                  Next: Editor
+                  Next: Resizer
                 </button>
               </div>
             </div>
@@ -170,4 +170,5 @@ export default function PanEditorStandaloneApp() {
     </>
   );
 }
+
 

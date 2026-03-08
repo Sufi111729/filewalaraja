@@ -1,35 +1,49 @@
+import {
+  ArrowsHorizontalIcon,
+  FileIcon,
+  FileImageIcon,
+  ImageIcon,
+  MergeIcon,
+  MinimizeIcon,
+  SplitIcon
+} from "./AppIcons";
+
+function resolveToolIcon(tool) {
+  const id = String(tool?.id || "").toLowerCase();
+  const title = String(tool?.title || "").toLowerCase();
+  const text = `${id} ${title}`;
+
+  if (text.includes("merge")) return <MergeIcon className="h-6 w-6" />;
+  if (text.includes("split")) return <SplitIcon className="h-6 w-6" />;
+  if (text.includes("compress") || text.includes("kb")) return <MinimizeIcon className="h-6 w-6" />;
+  if (text.includes("pdf") && text.includes("image")) return <FileImageIcon className="h-6 w-6" />;
+  if (text.includes("pdf")) return <FileIcon className="h-6 w-6" />;
+  if (text.includes("jpg") || text.includes("png") || text.includes("image") || text.includes("photo") || text.includes("signature")) {
+    return <ImageIcon className="h-6 w-6" />;
+  }
+  return <ArrowsHorizontalIcon className="h-6 w-6" />;
+}
+
 export default function ToolCard({ tool }) {
   const href = tool.href || "#";
   const hasActions = Array.isArray(tool.actions) && tool.actions.length > 0;
 
   const cardBody = (
     <>
-      <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#ffefe9] text-[#ea5a3d]">
-        <svg viewBox={tool.icon.viewBox} fill="none" className="h-6 w-6" aria-hidden="true">
-          {tool.icon.paths.map((path, idx) => (
-            <path
-              key={`${tool.id}-icon-${idx}`}
-              d={path.d}
-              stroke="currentColor"
-              strokeWidth={path.strokeWidth || 1.8}
-              fill={path.fill || "none"}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          ))}
-        </svg>
+      <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600">
+        {resolveToolIcon(tool)}
       </div>
-      <h3 className="text-2xl font-semibold text-slate-900 transition-colors duration-150 group-hover:text-slate-950">
+      <h3 className="text-xl font-semibold text-slate-900 transition-colors duration-150 group-hover:text-slate-950">
         {tool.title}
       </h3>
-      <p className="mt-3 text-base leading-relaxed text-slate-600">{tool.description}</p>
+      <p className="mt-2 text-sm leading-7 text-slate-600">{tool.description}</p>
       {hasActions ? (
         <div className="mt-5 flex flex-wrap gap-2">
           {tool.actions.map((action) => (
             <a
               key={`${tool.id}-${action.label}`}
               href={action.href || "#"}
-              className="inline-flex items-center rounded-lg bg-red-500 px-3 py-2 text-xs font-semibold text-white transition-colors duration-150 hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+              className="btn-primary"
             >
               {action.label}
             </a>
@@ -41,7 +55,7 @@ export default function ToolCard({ tool }) {
 
   if (hasActions) {
     return (
-      <div className="group block rounded-3xl border border-slate-200 bg-white p-8 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-sm">
+      <div className="tool-card group block">
         {cardBody}
       </div>
     );
@@ -50,7 +64,7 @@ export default function ToolCard({ tool }) {
   return (
     <a
       href={href}
-      className="group block rounded-3xl border border-slate-200 bg-white p-8 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-sm"
+      className="tool-card group block"
     >
       {cardBody}
     </a>

@@ -1,18 +1,5 @@
 import { useState } from "react";
-
-function ChevronDownIcon() {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-4 w-4"
-      aria-hidden="true"
-    >
-      <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
+import { ChevronDownIcon } from "./AppIcons";
 
 export default function AppModeNav({ mode = "pan" }) {
   const isPan = mode === "pan";
@@ -24,8 +11,8 @@ export default function AppModeNav({ mode = "pan" }) {
       <div className="flex items-center justify-between gap-3 px-4 py-3">
         <a href="/" className="flex items-center gap-2">
           <img
-            src="/logo-file-wala-raja.svg"
-            alt="File Wala Tool"
+            src="/file-wala-tool-logo.svg"
+            alt="File Wala Tool logo"
             className="h-10 w-auto"
             loading="eager"
           />
@@ -39,7 +26,7 @@ export default function AppModeNav({ mode = "pan" }) {
                 isPan ? "text-blue-700" : "text-slate-700 hover:text-slate-900"
               }`}
             >
-              PAN Editor
+              PAN Resizer
             </a>
             <button
               type="button"

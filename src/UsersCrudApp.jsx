@@ -114,7 +114,7 @@ export default function UsersCrudApp() {
   return (
     <>
       <TopNav />
-      <main className="mx-auto max-w-7xl p-4 md:p-6">
+      <main className="app-main">
         <section className="mb-5 border-b border-slate-200 bg-white px-4 py-8 md:px-6 md:py-10">
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="text-2xl font-bold leading-tight text-slate-900 md:text-4xl">User Management (CRUD)</h1>
@@ -202,3 +202,4 @@ export default function UsersCrudApp() {
     </>
   );
 }
+

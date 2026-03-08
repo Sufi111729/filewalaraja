@@ -8,6 +8,7 @@ Allow: /favicon-32x32.png
 Allow: /favicon.svg
 Allow: /apple-touch-icon.png
 Allow: /logo-file-wala-raja.svg
+Allow: /file-wala-tool-logo.svg
 
 # Private/admin routes
 Disallow: /admin

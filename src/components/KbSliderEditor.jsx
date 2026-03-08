@@ -116,7 +116,7 @@ export default function KbSliderEditor({
   return (
     <div className="panel">
       <div className="mb-3">
-        <h2 className="text-sm font-semibold text-slate-700">KB Slider Editor</h2>
+        <h2 className="text-sm font-semibold text-slate-700">KB Slider Resizer</h2>
       </div>
 
       <p className="text-xs text-slate-600">Target size control (JPEG only): {minKB}KB to {maxKB}KB.</p>

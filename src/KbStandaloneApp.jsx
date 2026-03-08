@@ -122,7 +122,7 @@ export default function KbStandaloneApp() {
   return (
     <>
       <TopNav />
-      <main className="mx-auto max-w-7xl p-4 md:p-6">
+      <main className="app-main">
       <AppHeroStrip mode="kb" />
 
       {step === 1 ? (
@@ -164,7 +164,8 @@ export default function KbStandaloneApp() {
                   <div className="preview-frame">
                     <img
                       src={finalResult.previewUrl}
-                      alt="KB editor output"
+                      alt="KB resizer output preview image"
+                      loading="lazy"
                       className="preview-image"
                     />
                   </div>
@@ -179,7 +180,7 @@ export default function KbStandaloneApp() {
                   <button
                     type="button"
                     className="btn-primary mt-3 w-full"
-                    onClick={() => downloadBlob(finalResult.blob, `kb-editor-${Date.now()}.jpg`)}
+                    onClick={() => downloadBlob(finalResult.blob, `kb-resizer-${Date.now()}.jpg`)}
                   >
                     Download JPG
                   </button>
@@ -207,4 +208,5 @@ export default function KbStandaloneApp() {
     </>
   );
 }
+
 

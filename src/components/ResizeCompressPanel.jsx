@@ -356,7 +356,7 @@ export default function ResizeCompressPanel({ file, cropPixels, preset, onProces
               </button>
             </div>
           </div>
-          <img src={previewMode === "before" ? beforeUrl : previewUrl} alt={previewMode === "before" ? "Before preview" : "After preview"} className="max-h-40 w-full rounded object-contain" />
+          <img src={previewMode === "before" ? beforeUrl : previewUrl} alt={previewMode === "before" ? "Before optimization preview image" : "After optimization preview image"} loading="lazy" className="max-h-40 w-full rounded object-contain" />
         </div>
       ) : null}
 

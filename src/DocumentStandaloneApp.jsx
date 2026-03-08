@@ -173,7 +173,7 @@ export default function DocumentStandaloneApp() {
   return (
     <>
       <TopNav />
-      <main className="mx-auto max-w-7xl p-4 md:p-6">
+      <main className="app-main">
         <section className="mb-5 border-b border-slate-200 bg-white px-4 py-8 md:px-6 md:py-10">
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="text-2xl font-bold leading-tight text-slate-900 md:text-4xl">
@@ -265,7 +265,8 @@ export default function DocumentStandaloneApp() {
                 <div className="preview-frame">
                   <img
                     src={finalResult.previewUrl}
-                    alt="Converted scanned document"
+                    alt="Converted scanned document preview"
+                    loading="lazy"
                     className="preview-image"
                   />
                 </div>
@@ -296,8 +297,23 @@ export default function DocumentStandaloneApp() {
             </div>
           </section>
         ) : null}
+
+        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
+          <h2 className="text-xl font-semibold text-slate-900">PDF to Image Converter for Form Uploads</h2>
+          <p className="mt-2 text-sm text-slate-700">
+            This free PDF to image converter extracts your scanned PDF page and optimizes output size for upload portals.
+          </p>
+          <h3 className="mt-3 text-base font-semibold text-slate-800">Related Tools</h3>
+          <p className="mt-2 text-sm text-slate-700">
+            <a className="font-medium text-red-600 hover:underline" href="/merge-pdf">Merge PDF</a>{" "}•{" "}
+            <a className="font-medium text-red-600 hover:underline" href="/split-pdf">Split PDF</a>{" "}•{" "}
+            <a className="font-medium text-red-600 hover:underline" href="/image-to-pdf">Image to PDF</a>{" "}•{" "}
+            <a className="font-medium text-red-600 hover:underline" href="/compress-pdf-to-300kb">Compress PDF 300KB</a>
+          </p>
+        </section>
       </main>
       <AppFooter />
     </>
   );
 }
+

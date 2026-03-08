@@ -6,7 +6,7 @@ export default function App() {
   return (
     <>
       <TopNav />
-      <main className="mx-auto max-w-7xl p-4 md:p-6">
+      <main className="app-main">
         <AppHeroStrip mode="home" />
         <ToolsGridSection />
       </main>
@@ -14,3 +14,4 @@ export default function App() {
     </>
   );
 }
+

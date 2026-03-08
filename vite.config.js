@@ -51,6 +51,8 @@ export default defineConfig(({ mode }) => {
         input: {
           main: resolve(__dirname, "index.html"),
           convert: resolve(__dirname, "convert.html"),
+          mergePdf: resolve(__dirname, "merge-pdf.html"),
+          splitPdf: resolve(__dirname, "split-pdf.html"),
           auth: resolve(__dirname, "auth.html"),
           adminLogin: resolve(__dirname, "admin-login.html"),
           users: resolve(__dirname, "users.html"),
@@ -59,6 +61,7 @@ export default defineConfig(({ mode }) => {
           documentValidator: resolve(__dirname, "document-validator.html"),
           imageTo50kb: resolve(__dirname, "image-to-50kb.html"),
           imageTo20kb: resolve(__dirname, "image-to-20kb.html"),
+          imageTo100kb: resolve(__dirname, "compress-image-100kb.html"),
           panPhoto50kb: resolve(__dirname, "pan-photo-50kb.html"),
           signature20kb: resolve(__dirname, "signature-20kb.html"),
           compressPdfTo300kb: resolve(__dirname, "compress-pdf-to-300kb.html")

@@ -1,7 +1,7 @@
 export default function KbEditor({ kb, onChangeKb }) {
   return (
     <div className="panel">
-      <h2 className="mb-3 text-sm font-semibold text-slate-700">KB Editor</h2>
+      <h2 className="mb-3 text-sm font-semibold text-slate-700">KB Resizer</h2>
       <p className="text-xs text-slate-600">
         Final JPG size target set karein (recommended: 50KB).
       </p>

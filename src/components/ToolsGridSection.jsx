@@ -31,12 +31,12 @@ export default function ToolsGridSection() {
   return (
     <section id="pan-tool-suite" className="mb-10">
       <div id="tools-section" />
-      <div className="mb-4">
+      <div className="mb-5">
         <CategoryChips categories={toolCategories} activeCategory={activeCategory} onSelect={setActiveCategory} />
       </div>
 
       {filteredTools.length ? (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {filteredTools.map((tool) => (
             <ToolCard key={tool.id} tool={tool} />
           ))}

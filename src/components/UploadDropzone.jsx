@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { CloudUploadIcon, UploadIcon } from "./AppIcons";
 
 const ACCEPTED = ["image/jpeg", "image/jpg", "image/png"];
 
@@ -38,19 +39,21 @@ export default function UploadDropzone({ onFileSelected, file }) {
 
   return (
     <div
-      className="panel min-h-[300px] border-2 border-dashed border-slate-300 text-center"
+      className="panel upload-zone min-h-[300px] text-center"
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >
       <div className="flex h-full flex-col items-center justify-center py-6">
+        <CloudUploadIcon className="mx-auto h-10 w-10 text-slate-400" />
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Image Input</p>
-        <p className="mt-2 text-sm text-slate-700">Drag and drop JPG/JPEG/PNG here</p>
+        <p className="mt-2 text-sm font-medium text-slate-700">Drag and drop JPG/JPEG/PNG here</p>
 
         {file ? (
           <div className="mt-4">
             <img
               src={previewUrl}
-              alt="Uploaded preview"
+              alt="Uploaded source image preview"
+              loading="lazy"
               className="mx-auto h-40 w-auto rounded-lg border border-slate-200 object-contain"
             />
             <p className="mt-2 text-sm font-medium text-slate-800">{file.name}</p>
@@ -58,11 +61,8 @@ export default function UploadDropzone({ onFileSelected, file }) {
           </div>
         ) : null}
 
-        <button
-          type="button"
-          className="btn-muted mt-4"
-          onClick={() => inputRef.current?.click()}
-        >
+        <button type="button" className="btn-muted mt-4 inline-flex items-center gap-2" onClick={() => inputRef.current?.click()}>
+          <UploadIcon className="h-4 w-4" />
           {file ? "Change File" : "Choose File"}
         </button>
         <p className="mt-2 text-xs text-slate-500">Final output will be generated as JPG only.</p>

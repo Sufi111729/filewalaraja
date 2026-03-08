@@ -98,7 +98,8 @@ export default function PreviewDownload({ result, presetId }) {
       <div className="preview-frame mt-0">
         <img
           src={result.previewUrl}
-          alt="Final output"
+          alt="Final processed PAN image preview"
+          loading="lazy"
           className="preview-image"
         />
       </div>
