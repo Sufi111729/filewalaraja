@@ -165,3 +165,66 @@ export function TrashIcon({ className = "h-4 w-4" }) {
   );
 }
 
+export function CropIcon({ className = "h-5 w-5" }) {
+  return (
+    <IconBase className={className}>
+      <path d="M7 3v11a3 3 0 0 0 3 3h11" />
+      <path d="M17 21V10a3 3 0 0 0-3-3H3" />
+    </IconBase>
+  );
+}
+
+export function RotateIcon({ className = "h-5 w-5" }) {
+  return (
+    <IconBase className={className}>
+      <path d="M20 11a8 8 0 1 0-2.34 5.66" />
+      <path d="M20 4v7h-7" />
+    </IconBase>
+  );
+}
+
+export function SlidersIcon({ className = "h-5 w-5" }) {
+  return (
+    <IconBase className={className}>
+      <path d="M4 7h8M16 7h4M10 7v10M4 17h4M12 17h8M16 17V7" />
+    </IconBase>
+  );
+}
+
+export function TypeIcon({ className = "h-5 w-5" }) {
+  return (
+    <IconBase className={className}>
+      <path d="M5 6h14M12 6v12M8 18h8" />
+    </IconBase>
+  );
+}
+
+export function StickerIcon({ className = "h-5 w-5" }) {
+  return (
+    <IconBase className={className}>
+      <path d="M7 4h10a3 3 0 0 1 3 3v10l-5 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Z" />
+      <path d="M15 20v-4a3 3 0 0 1 3-3h2" />
+    </IconBase>
+  );
+}
+
+export function WandIcon({ className = "h-5 w-5" }) {
+  return (
+    <IconBase className={className}>
+      <path d="m5 19 10-10" />
+      <path d="m14 4 1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2Z" />
+      <path d="m18 13 .7 1.3L20 15l-1.3.7L18 17l-.7-1.3L16 15l1.3-.7L18 13Z" />
+    </IconBase>
+  );
+}
+
+export function BackgroundRemoveIcon({ className = "h-5 w-5" }) {
+  return (
+    <IconBase className={className}>
+      <rect x="4" y="5" width="16" height="14" rx="2" />
+      <path d="M8 15c1.3-2 2.7-3 4-3s2.7 1 4 3" />
+      <path d="M9 10h.01M15 10h.01" />
+      <path d="M3 3l18 18" />
+    </IconBase>
+  );
+}

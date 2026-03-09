@@ -1,17 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { bgWhitePro, enhancePhoto } from "../api/aiClient";
 import { useAiHealth } from "../store/aiHealthStore";
 import { buildResizedCanvas, getPresetTargetPx, resizeAndCompressImage } from "../lib/imageUtils";
+import { removeBackgroundPro } from "../features/bgRemove/bgRemove";
 
-function canvasToJpegBlob(canvas, quality = 0.94) {
+function canvasToBlob(canvas, type = "image/jpeg", quality = 0.94) {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (!blob) {
-        reject(new Error("Failed to prepare image for AI processing."));
+        reject(new Error("Failed to prepare image for processing."));
         return;
       }
       resolve(blob);
-    }, "image/jpeg", quality);
+    }, type, quality);
   });
 }
 
@@ -19,9 +20,39 @@ function blobToFile(blob, filename) {
   return new File([blob], filename, { type: blob.type || "image/jpeg" });
 }
 
-export default function ResizeCompressPanel({ file, cropPixels, preset, onProcessed }) {
+function formatKb(bytes) {
+  return Number((bytes / 1024).toFixed(2));
+}
+
+function createResultFromBlob({ blob, previewUrl, width, height, quality, withinLimit, outputFormat, extra = {} }) {
+  return {
+    blob,
+    previewUrl,
+    width,
+    height,
+    kb: formatKb(blob.size),
+    quality,
+    withinLimit,
+    outputFormat,
+    mimeType: blob.type,
+    ...extra
+  };
+}
+
+function ToolSection({ title, subtitle, children }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
+      {subtitle ? <p className="mt-1 text-xs text-slate-500">{subtitle}</p> : null}
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
+export default function ResizeCompressPanel({ file, cropPixels, preset, onProcessed, activeTool = "resize" }) {
   const { loading: healthLoading, status, features, error: healthError, checkHealth } = useAiHealth();
   const aiUp = status === "UP";
+  const target = getPresetTargetPx(preset);
 
   const [progress, setProgress] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -40,20 +71,36 @@ export default function ResizeCompressPanel({ file, cropPixels, preset, onProces
   const [clarity, setClarity] = useState(24);
   const [outputQuality, setOutputQuality] = useState(92);
 
+  const [removeBgEnabled, setRemoveBgEnabled] = useState(true);
+  const [smoothEdges, setSmoothEdges] = useState(6);
+  const [featherEdges, setFeatherEdges] = useState(4);
+  const [maskShift, setMaskShift] = useState(0);
+  const [subjectBias, setSubjectBias] = useState(62);
+
   const [previewUrl, setPreviewUrl] = useState("");
   const [beforeUrl, setBeforeUrl] = useState("");
-  const [previewMode, setPreviewMode] = useState("after");
+  const [previewMode, setPreviewMode] = useState("result");
   const [error, setError] = useState("");
   const [warning, setWarning] = useState("");
 
   const abortRef = useRef(null);
-  const target = getPresetTargetPx(preset);
+
+  const isRemoveBgTool = activeTool === "remove-bg";
+  const isUpscaleTool = activeTool === "ai-upscale";
+
+  const previewTabs = useMemo(() => {
+    const tabs = [];
+    if (beforeUrl) tabs.push({ id: "original", label: "Original Image", url: beforeUrl });
+    if (previewUrl) tabs.push({ id: "result", label: "Removed Background", url: previewUrl });
+    return tabs;
+  }, [beforeUrl, previewUrl]);
 
   useEffect(() => {
     return () => {
       if (beforeUrl) URL.revokeObjectURL(beforeUrl);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
-  }, [beforeUrl]);
+  }, [beforeUrl, previewUrl]);
 
   const handleResetEnhance = () => {
     setSharpness(55);
@@ -98,36 +145,36 @@ export default function ResizeCompressPanel({ file, cropPixels, preset, onProces
 
   const runRemoteAiPipeline = async () => {
     const base = await buildResizedCanvas({ file, cropPixels, preset, onProgress: () => {} });
-    const baseBlob = await canvasToJpegBlob(base.canvas, 0.94);
+    const baseBlob = await canvasToBlob(base.canvas, "image/jpeg", 0.94);
     setBeforeUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return URL.createObjectURL(baseBlob);
     });
 
-    let currentFile = blobToFile(baseBlob, "pan-base.jpg");
+    let currentFile = blobToFile(baseBlob, "editor-base.jpg");
     const abortController = new AbortController();
     abortRef.current = abortController;
 
-    if (enhanceEnabled && features.enhance) {
-      setRemoteStage("Enhancing photo...");
+    if (enhanceEnabled && features.enhance && isUpscaleTool) {
+      setRemoteStage("Running AI upscale...");
       setRemoteProgress(0);
       const enhancedBlob = await enhancePhoto(currentFile, false, 2, {
         signal: abortController.signal,
         timeoutMs: 120000,
         onUploadProgress: setRemoteProgress
       });
-      currentFile = blobToFile(enhancedBlob, "pan-enhanced.jpg");
+      currentFile = blobToFile(enhancedBlob, "editor-upscaled.jpg");
     }
 
-    if (bgCleaning && features.bgWhitePro) {
-      setRemoteStage("Whitening background...");
+    if (bgCleaning && features.bgWhitePro && !isRemoveBgTool) {
+      setRemoteStage("Cleaning background...");
       setRemoteProgress(0);
       const whiteBlob = await bgWhitePro(currentFile, "u2net", edgeSmoothness, {
         signal: abortController.signal,
         timeoutMs: 120000,
         onUploadProgress: setRemoteProgress
       });
-      currentFile = blobToFile(whiteBlob, "pan-bg-white.jpg");
+      currentFile = blobToFile(whiteBlob, "editor-bg-white.jpg");
     }
 
     abortRef.current = null;
@@ -135,6 +182,91 @@ export default function ResizeCompressPanel({ file, cropPixels, preset, onProces
       file: currentFile,
       crop: { x: 0, y: 0, width: base.canvas.width, height: base.canvas.height }
     };
+  };
+
+  const processStandardEditor = async () => {
+    let sourceFile = file;
+    let sourceCrop = cropPixels;
+    const wantRemote = aiUp && isUpscaleTool && enhanceEnabled && features.enhance;
+
+    if (wantRemote) {
+      try {
+        const remote = await runRemoteAiPipeline();
+        sourceFile = remote.file;
+        sourceCrop = remote.crop;
+      } catch (e) {
+        setWarning(e?.name === "AbortError" ? "AI upscale cancelled. Using original image." : "AI upscale unavailable right now. Using original image.");
+        await checkHealth();
+      }
+    } else {
+      const base = await buildResizedCanvas({ file, cropPixels, preset, onProgress: () => {} });
+      const baseBlob = await canvasToBlob(base.canvas, "image/jpeg", 0.94);
+      setBeforeUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(baseBlob);
+      });
+    }
+
+    const result = await resizeAndCompressImage({
+      file: sourceFile,
+      cropPixels: sourceCrop,
+      preset,
+      onProgress: setProgress,
+      backgroundOptions: { enabled: false },
+      enhancementOptions: { enabled: false },
+      compressionOptions: { outputQuality: outputQuality / 100 }
+    });
+
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return result.previewUrl || "";
+    });
+    setPreviewMode("result");
+    onProcessed({ ...result, outputFormat: "jpg", mimeType: "image/jpeg" });
+  };
+
+  const processBackgroundRemoval = async () => {
+    const base = await buildResizedCanvas({ file, cropPixels, preset, onProgress: () => setProgress(16) });
+    const baseBlob = await canvasToBlob(base.canvas, "image/jpeg", 0.94);
+    setBeforeUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(baseBlob);
+    });
+
+    setRemoteStage("Detecting subject and removing background...");
+    const removed = await removeBackgroundPro(base.canvas, {
+      subjectBias,
+      smoothEdges,
+      featherEdges,
+      maskShift,
+      onProgress: (value) => setProgress(18 + Math.round(value * 0.45))
+    });
+
+    setRemoteStage("Preparing transparent PNG...");
+    setProgress(86);
+    const blob = await canvasToBlob(removed.transparentCanvas, "image/png");
+    const nextPreviewUrl = URL.createObjectURL(blob);
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return nextPreviewUrl;
+    });
+    setPreviewMode("result");
+    setProgress(100);
+
+    onProcessed(
+      createResultFromBlob({
+        blob,
+        previewUrl: nextPreviewUrl,
+        width: removed.transparentCanvas.width,
+        height: removed.transparentCanvas.height,
+        quality: "PNG",
+        withinLimit: true,
+        outputFormat: "png",
+        extra: {
+          mode: "remove-background"
+        }
+      })
+    );
   };
 
   const handleProcess = async () => {
@@ -155,40 +287,11 @@ export default function ResizeCompressPanel({ file, cropPixels, preset, onProces
       setRemoteStage("");
       setRemoteProgress(0);
 
-      let sourceFile = file;
-      let sourceCrop = cropPixels;
-
-      const wantRemote = aiUp && ((enhanceEnabled && features.enhance) || (bgCleaning && features.bgWhitePro));
-
-      if (wantRemote) {
-        try {
-          const remote = await runRemoteAiPipeline();
-          sourceFile = remote.file;
-          sourceCrop = remote.crop;
-        } catch (e) {
-          if (e?.name === "AbortError") {
-            setWarning("AI processing cancelled. Using original image.");
-          } else {
-            setWarning("AI processing unavailable right now. Using original image.");
-          }
-          await checkHealth();
-          sourceFile = file;
-          sourceCrop = cropPixels;
-        }
+      if (isRemoveBgTool && removeBgEnabled) {
+        await processBackgroundRemoval();
+      } else {
+        await processStandardEditor();
       }
-
-      const result = await resizeAndCompressImage({
-        file: sourceFile,
-        cropPixels: sourceCrop,
-        preset,
-        onProgress: setProgress,
-        backgroundOptions: { enabled: false },
-        enhancementOptions: { enabled: false },
-        compressionOptions: { outputQuality: outputQuality / 100 }
-      });
-
-      setPreviewUrl(result.previewUrl || "");
-      onProcessed(result);
     } catch (e) {
       setError(e.message || "Processing failed.");
     } finally {
@@ -201,29 +304,38 @@ export default function ResizeCompressPanel({ file, cropPixels, preset, onProces
 
   return (
     <div className="panel">
-      <h2 className="mb-3 text-sm font-semibold text-slate-700">Resize + Compress</h2>
-      <p className="text-xs text-slate-600">
-        Target: {target.width}x{target.height}px, Max {preset.maxKb}KB
-      </p>
+      <div className="mb-3 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-700">
+            {isRemoveBgTool ? "Remove Background" : isUpscaleTool ? "AI Upscale" : "Resize + Compress"}
+          </h2>
+          <p className="mt-1 text-xs text-slate-600">
+            Target canvas: {target.width}x{target.height}px, max {preset.maxKb}KB source workflow
+          </p>
+        </div>
+        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          {isRemoveBgTool ? "Transparent PNG Ready" : "Editor Output"}
+        </div>
+      </div>
 
       {healthLoading ? (
-        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-          Checking Pro AI service...
+        <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+          Checking AI services...
         </div>
       ) : null}
 
-      {!healthLoading && !aiUp ? (
-        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-          Pro AI features unavailable.
+      {!healthLoading && !aiUp && isUpscaleTool ? (
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+          AI upscale service unavailable.
           {healthError ? <p className="mt-1 text-[11px]">{healthError}</p> : null}
         </div>
       ) : null}
 
-      {!healthLoading && aiUp ? (
-        <>
-          {features.enhance ? (
-            <>
-              <label className="mt-3 flex items-center gap-2 text-sm text-slate-700">
+      {!isRemoveBgTool ? (
+        <div className="grid gap-4">
+          {isUpscaleTool ? (
+            <ToolSection title="AI Upscale" subtitle="Increase resolution, restore detail, and reduce blur.">
+              <label className="flex items-center gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"
                   className="h-4 w-4 accent-blue-600"
@@ -231,99 +343,91 @@ export default function ResizeCompressPanel({ file, cropPixels, preset, onProces
                   onChange={(e) => setEnhanceEnabled(e.target.checked)}
                   disabled={busy}
                 />
-                Clear Photo / Enhance (Pro AI)
+                Enable AI upscale
               </label>
-              {enhanceEnabled ? (
-                <div className="mt-3 grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                  <div className="flex gap-2">
-                    <button type="button" className="btn-muted text-xs" onClick={handleAutoEnhance} disabled={busy}>
-                      Auto Enhance
-                    </button>
-                    <button type="button" className="btn-muted text-xs" onClick={handleResetEnhance} disabled={busy}>
-                      Reset
-                    </button>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-700">Sharpness: {sharpness}</label>
-                    <input className="mt-1 w-full accent-blue-600" type="range" min={0} max={100} step={1} value={sharpness} onChange={(e) => setSharpness(Number(e.target.value))} disabled={busy} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-700">Denoise: {denoise}</label>
-                    <input className="mt-1 w-full accent-blue-600" type="range" min={0} max={100} step={1} value={denoise} onChange={(e) => setDenoise(Number(e.target.value))} disabled={busy} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-700">Brightness: {brightness}</label>
-                    <input className="mt-1 w-full accent-blue-600" type="range" min={0} max={100} step={1} value={brightness} onChange={(e) => setBrightness(Number(e.target.value))} disabled={busy} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-700">Contrast: {contrast}</label>
-                    <input className="mt-1 w-full accent-blue-600" type="range" min={0} max={100} step={1} value={contrast} onChange={(e) => setContrast(Number(e.target.value))} disabled={busy} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-700">Clarity: {clarity}</label>
-                    <input className="mt-1 w-full accent-blue-600" type="range" min={0} max={100} step={1} value={clarity} onChange={(e) => setClarity(Number(e.target.value))} disabled={busy} />
-                  </div>
-                </div>
-              ) : null}
-            </>
+              <div className="mt-3 flex gap-2">
+                <button type="button" className="btn-muted text-xs" onClick={handleAutoEnhance} disabled={busy}>
+                  Auto Tune
+                </button>
+                <button type="button" className="btn-muted text-xs" onClick={handleResetEnhance} disabled={busy}>
+                  Reset
+                </button>
+              </div>
+            </ToolSection>
           ) : null}
 
-          {features.bgWhitePro ? (
-            <>
-              <label className="mt-3 flex items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 accent-blue-600"
-                  checked={bgCleaning}
-                  onChange={(e) => setBgCleaning(e.target.checked)}
-                  disabled={busy}
-                />
-                Make Background Pure White (Pro AI)
-              </label>
-
-              {bgCleaning ? (
-                <div className="mt-3 grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                  <div>
-                    <label className="text-xs font-medium text-slate-700">Strength: {strength}</label>
-                    <input className="mt-1 w-full accent-blue-600" type="range" min={0} max={100} step={1} value={strength} onChange={(e) => setStrength(Number(e.target.value))} disabled={busy} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-700">Edge Smoothness: {edgeSmoothness}px</label>
-                    <input className="mt-1 w-full accent-blue-600" type="range" min={0} max={12} step={1} value={edgeSmoothness} onChange={(e) => setEdgeSmoothness(Number(e.target.value))} disabled={busy} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-700">Shadow Removal: {shadowRemoval}</label>
-                    <input className="mt-1 w-full accent-blue-600" type="range" min={0} max={100} step={1} value={shadowRemoval} onChange={(e) => setShadowRemoval(Number(e.target.value))} disabled={busy} />
-                  </div>
+          <ToolSection title="Export Quality" subtitle="Keep final JPEG output balanced for form uploads and cleaner detail.">
+            <label className="text-xs font-medium text-slate-700">
+              JPEG Output Quality: {(outputQuality / 100).toFixed(2)}
+            </label>
+            <input
+              className="mt-1 w-full accent-blue-600"
+              type="range"
+              min={85}
+              max={95}
+              step={1}
+              value={outputQuality}
+              onChange={(e) => setOutputQuality(Number(e.target.value))}
+              disabled={busy}
+            />
+          </ToolSection>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          <ToolSection title="AI Background Removal" subtitle="Detect the main subject, preserve fine details, and cut the background cleanly.">
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-blue-600"
+                checked={removeBgEnabled}
+                onChange={(e) => setRemoveBgEnabled(e.target.checked)}
+                disabled={busy}
+              />
+              Remove background with AI
+            </label>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div>
+                <label className="text-xs font-medium text-slate-700">Subject protection: {subjectBias}</label>
+                <input className="mt-1 w-full accent-blue-600" type="range" min={30} max={90} step={1} value={subjectBias} onChange={(e) => setSubjectBias(Number(e.target.value))} disabled={busy} />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-700">Output format</p>
+                <div className="mt-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
+                  Transparent PNG
                 </div>
-              ) : null}
-            </>
-          ) : null}
-        </>
-      ) : null}
+              </div>
+            </div>
+          </ToolSection>
 
-      <div className="mt-3">
-        <label className="text-xs font-medium text-slate-700">
-          JPEG Output Quality: {(outputQuality / 100).toFixed(2)}
-        </label>
-        <input
-          className="mt-1 w-full accent-blue-600"
-          type="range"
-          min={85}
-          max={95}
-          step={1}
-          value={outputQuality}
-          onChange={(e) => setOutputQuality(Number(e.target.value))}
-          disabled={busy}
-        />
-      </div>
+          <ToolSection title="Edge Refinement" subtitle="Smooth jagged edges, feather the mask, and expand or contract the cutout.">
+            <div className="grid gap-3 md:grid-cols-3">
+              <div>
+                <label className="text-xs font-medium text-slate-700">Smooth edges: {smoothEdges}</label>
+                <input className="mt-1 w-full accent-blue-600" type="range" min={0} max={16} step={1} value={smoothEdges} onChange={(e) => setSmoothEdges(Number(e.target.value))} disabled={busy} />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-700">Feather edges: {featherEdges}</label>
+                <input className="mt-1 w-full accent-blue-600" type="range" min={0} max={18} step={1} value={featherEdges} onChange={(e) => setFeatherEdges(Number(e.target.value))} disabled={busy} />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-700">Expand / contract mask: {maskShift}</label>
+                <input className="mt-1 w-full accent-blue-600" type="range" min={-12} max={12} step={1} value={maskShift} onChange={(e) => setMaskShift(Number(e.target.value))} disabled={busy} />
+              </div>
+            </div>
+          </ToolSection>
+        </div>
+      )}
 
-      <button type="button" onClick={handleProcess} disabled={busy} className="btn-success mt-3">
+      <button type="button" onClick={handleProcess} disabled={busy} className="btn-success mt-4">
         {busy ? (
           <span className="inline-flex items-center gap-2">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-200 border-t-white" />
-            Processing...
+            {isRemoveBgTool ? "Removing background..." : "Processing..."}
           </span>
+        ) : isRemoveBgTool ? (
+          "Remove Background"
+        ) : isUpscaleTool ? (
+          "Generate AI Upscale"
         ) : (
           "Generate Final JPG"
         )}
@@ -332,10 +436,12 @@ export default function ResizeCompressPanel({ file, cropPixels, preset, onProces
       {busy && remoteStage ? (
         <div className="mt-2 rounded bg-slate-50 p-2 text-xs text-slate-700">
           <p>{remoteStage}</p>
-          <p>Upload: {remoteProgress}%</p>
-          <button type="button" className="btn-muted mt-2 text-xs" onClick={cancelRemoteProcessing}>
-            Cancel AI Request
-          </button>
+          {remoteProgress ? <p>Upload: {remoteProgress}%</p> : null}
+          {isUpscaleTool ? (
+            <button type="button" className="btn-muted mt-2 text-xs" onClick={cancelRemoteProcessing}>
+              Cancel AI Request
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -343,20 +449,25 @@ export default function ResizeCompressPanel({ file, cropPixels, preset, onProces
         <div className="h-3 rounded-full bg-emerald-500 transition-all" style={{ width: `${progress}%` }} />
       </div>
 
-      {previewUrl && beforeUrl ? (
-        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-700">Before / After</p>
-            <div className="inline-flex overflow-hidden rounded border border-slate-300 text-xs">
-              <button type="button" className={`px-2 py-1 ${previewMode === "before" ? "bg-slate-900 text-white" : "bg-white text-slate-700"}`} onClick={() => setPreviewMode("before")} disabled={busy}>
-                Before
-              </button>
-              <button type="button" className={`px-2 py-1 ${previewMode === "after" ? "bg-slate-900 text-white" : "bg-white text-slate-700"}`} onClick={() => setPreviewMode("after")} disabled={busy}>
-                After
-              </button>
+      {previewTabs.length ? (
+        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-medium text-slate-700">Preview</p>
+            <div className="inline-flex flex-wrap overflow-hidden rounded border border-slate-300 text-xs">
+              {previewTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`px-2 py-1 ${previewMode === tab.id ? "bg-slate-900 text-white" : "bg-white text-slate-700"}`}
+                  onClick={() => setPreviewMode(tab.id)}
+                  disabled={busy}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
           </div>
-          <img src={previewMode === "before" ? beforeUrl : previewUrl} alt={previewMode === "before" ? "Before optimization preview image" : "After optimization preview image"} loading="lazy" className="max-h-40 w-full rounded object-contain" />
+          <img src={previewTabs.find((item) => item.id === previewMode)?.url || previewTabs[0].url} alt="Editor preview after AI processing" loading="lazy" className="max-h-48 w-full rounded object-contain" />
         </div>
       ) : null}
 

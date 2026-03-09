@@ -13,7 +13,9 @@ export default function PreviewDownload({ result, presetId }) {
     setValidateState({ called: false, loading: false, data: null, warning: "" });
   }, [result]);
 
-  const filename = useMemo(() => `pan-${presetId}-${Date.now()}.jpg`, [presetId]);
+  const extension = result?.outputFormat || (result?.mimeType === "image/png" ? "png" : "jpg");
+  const filename = useMemo(() => `pan-${presetId}-${Date.now()}.${extension}`, [presetId, extension]);
+  const isTransparentOutput = result?.mode === "remove-background";
 
   if (!result) {
     return null;
@@ -40,7 +42,7 @@ export default function PreviewDownload({ result, presetId }) {
         });
       }
 
-      if (result.kb > preset.maxKb) {
+      if (!isTransparentOutput && result.kb > preset.maxKb) {
         errors.push({
           code: "SIZE_LIMIT_EXCEEDED",
           message: `Expected <= ${preset.maxKb}KB but got ${result.kb}KB`
@@ -66,7 +68,8 @@ export default function PreviewDownload({ result, presetId }) {
           actualHeight: result.height,
           maxKb: preset.maxKb,
           actualKb: result.kb,
-          jpegQuality: result.quality
+          outputFormat: extension,
+          quality: result.quality
         },
         errors,
         warnings
@@ -106,9 +109,10 @@ export default function PreviewDownload({ result, presetId }) {
       <div className="mt-3 grid gap-1 text-xs text-slate-700">
         <p>Preview Px: {result.width}x{result.height}</p>
         <p>Final Size: {result.kb} KB</p>
-        <p>JPEG Quality Used: {result.quality}</p>
+        <p>Output: {String(extension).toUpperCase()}</p>
+        <p>Quality: {result.quality}</p>
       </div>
-      {!result.withinLimit ? (
+      {!result.withinLimit && !isTransparentOutput ? (
         <p className="mt-2 text-xs text-amber-600">
           50KB target hard hai. System ne max possible clarity maintain karte hue size ko control kiya hai.
         </p>
@@ -120,7 +124,7 @@ export default function PreviewDownload({ result, presetId }) {
           className="btn-primary"
           onClick={() => downloadBlob(result.blob, filename)}
         >
-          Download JPG
+          Download {String(extension).toUpperCase()}
         </button>
 
         <button

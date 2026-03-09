@@ -4,14 +4,14 @@ export default function AppHeroStrip({ mode = "pan" }) {
   const isKb = mode === "kb";
 
   const title = isPan
-    ? "PAN Card Photo and Signature Resizer"
+    ? "AI Background Remover and Image Editor"
     : isKb
       ? "Reduce Image Size Online by KB"
     : isHome
       ? "File Wala Tool"
       : "File Converter Online for India Forms";
   const subtitle = isPan
-    ? "Upload, crop, resize and export PAN-ready JPEG in a few clicks."
+    ? "Upload, crop, resize, AI upscale, remove background, and export a transparent PNG from one editor."
     : isKb
       ? "Upload image, choose target KB, and export optimized output with preview."
     : isHome

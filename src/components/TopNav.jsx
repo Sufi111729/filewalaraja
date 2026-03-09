@@ -25,12 +25,14 @@ const NAV = {
   image: {
     label: "Image Tools",
     items: [
+      { label: "Background Remover", href: "/pan-editor.html" },
+      { label: "AI Image Scaler", href: "/ai-image-scaler" },
       { label: "Image to 20KB", href: "/image-to-20kb" },
       { label: "Image to 50KB", href: "/image-to-50kb" },
       { label: "Image to 100KB", href: "/compress-image-100kb" },
       { label: "PAN Photo 50KB", href: "/pan-photo-50kb" },
       { label: "Signature 20KB", href: "/signature-20kb" },
-      { label: "Crop & Resize", href: "/pan-editor.html?preset=photo" }
+      { label: "Image Editor", href: "/pan-editor.html" }
     ]
   },
   convert: {
@@ -46,6 +48,8 @@ const NAV = {
   compress: {
     label: "Compress Tools",
     items: [
+      { label: "Background Remover", href: "/pan-editor.html" },
+      { label: "AI Image Scaler", href: "/ai-image-scaler" },
       { label: "Image KB Resizer", href: "/kb-editor.html" },
       { label: "Image to 20KB", href: "/image-to-20kb" },
       { label: "Image to 50KB", href: "/image-to-50kb" },

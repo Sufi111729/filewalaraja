@@ -11,10 +11,40 @@ export const toolCategories = [
 
 export const tools = [
   {
-    id: "pan-card-editor",
-    title: "PAN Card Resizer",
-    description: "Crop, resize and export PAN photo/signature in required format.",
-    categoryId: "pan-tool",
+    id: "ai-background-remover",
+    title: "Background Remover Editor",
+    description: "Universal background remover with auto cutout, remove and restore brushes, mask overlay preview, and transparent PNG export.",
+    categoryId: "edit",
+    href: "/pan-editor.html",
+    icon: {
+      viewBox: "0 0 24 24",
+      paths: [
+        { d: "M4 6h16v12H4z", strokeWidth: 1.8, fill: "none" },
+        { d: "M8 15c1.3-2 2.7-3 4-3s2.7 1 4 3", strokeWidth: 1.8, fill: "none" },
+        { d: "M9 10h.01M15 10h.01", strokeWidth: 2.5, fill: "none" },
+        { d: "M3 3l18 18", strokeWidth: 1.8, fill: "none" }
+      ]
+    }
+  },
+  {
+    id: "ai-image-scaler",
+    title: "AI Image Scaler",
+    description: "Upscale or downscale JPG, PNG, and WEBP images with quality-focused smart resizing.",
+    categoryId: "intelligence",
+    href: "/ai-image-scaler",
+    icon: {
+      viewBox: "0 0 24 24",
+      paths: [
+        { d: "M8 4H4v4M16 4h4v4M8 20H4v-4M20 16v4h-4", strokeWidth: 1.8, fill: "none" },
+        { d: "M4 4l5 5M20 4l-5 5M4 20l5-5M20 20l-5-5", strokeWidth: 1.8, fill: "none" }
+      ]
+    }
+  },
+  {
+    id: "image-editor",
+    title: "Image Editor Workspace",
+    description: "Open the universal editor for background removal, manual mask refinement, and transparent PNG export.",
+    categoryId: "edit",
     href: "/pan-editor.html",
     icon: {
       viewBox: "0 0 24 24",
