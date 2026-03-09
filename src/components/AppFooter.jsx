@@ -16,7 +16,8 @@ export default function AppFooter() {
 
         <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
           <a href="/pan-editor.html" className="transition-colors hover:text-slate-900">Background Remover</a>
-          <a href="/ai-image-scaler" className="transition-colors hover:text-slate-900">AI Image Scaler</a>
+          <a href="/ai-image-upscaler" className="transition-colors hover:text-slate-900">AI Image Upscaler</a>
+          <a href="/ai-image-downscaler" className="transition-colors hover:text-slate-900">AI Image Downscaler</a>
           <a href="/merge-pdf" className="transition-colors hover:text-slate-900">Merge PDF</a>
           <a href="/split-pdf" className="transition-colors hover:text-slate-900">Split PDF</a>
           <a href="/image-to-pdf" className="transition-colors hover:text-slate-900">Image to PDF</a>

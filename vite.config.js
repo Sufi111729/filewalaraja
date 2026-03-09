@@ -59,6 +59,8 @@ export default defineConfig(({ mode }) => {
           panEditor: resolve(__dirname, "pan-editor.html"),
           kbEditor: resolve(__dirname, "kb-editor.html"),
           aiImageScaler: resolve(__dirname, "ai-image-scaler.html"),
+          aiImageUpscaler: resolve(__dirname, "ai-image-upscaler.html"),
+          aiImageDownscaler: resolve(__dirname, "ai-image-downscaler.html"),
           documentValidator: resolve(__dirname, "document-validator.html"),
           imageTo50kb: resolve(__dirname, "image-to-50kb.html"),
           imageTo20kb: resolve(__dirname, "image-to-20kb.html"),

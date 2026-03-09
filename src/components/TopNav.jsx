@@ -26,7 +26,8 @@ const NAV = {
     label: "Image Tools",
     items: [
       { label: "Background Remover", href: "/pan-editor.html" },
-      { label: "AI Image Scaler", href: "/ai-image-scaler" },
+      { label: "AI Image Upscaler", href: "/ai-image-upscaler" },
+      { label: "AI Image Downscaler", href: "/ai-image-downscaler" },
       { label: "Image to 20KB", href: "/image-to-20kb" },
       { label: "Image to 50KB", href: "/image-to-50kb" },
       { label: "Image to 100KB", href: "/compress-image-100kb" },
@@ -49,7 +50,8 @@ const NAV = {
     label: "Compress Tools",
     items: [
       { label: "Background Remover", href: "/pan-editor.html" },
-      { label: "AI Image Scaler", href: "/ai-image-scaler" },
+      { label: "AI Image Upscaler", href: "/ai-image-upscaler" },
+      { label: "AI Image Downscaler", href: "/ai-image-downscaler" },
       { label: "Image KB Resizer", href: "/kb-editor.html" },
       { label: "Image to 20KB", href: "/image-to-20kb" },
       { label: "Image to 50KB", href: "/image-to-50kb" },

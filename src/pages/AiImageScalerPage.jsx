@@ -70,6 +70,79 @@ const QUICK_LINKS = [
   { label: "Image to 20KB", href: "/image-to-20kb" }
 ];
 
+const VARIANT_CONFIG = {
+  both: {
+    lockedMode: "",
+    heroTitle: landingCopy.heroTitle,
+    heroDescription: landingCopy.heroDescription,
+    benefitIntro: landingCopy.benefitIntro,
+    benefits: BENEFITS,
+    quickLinks: QUICK_LINKS,
+    toolTitle: "AI upper scaling and AI lower scaling tool",
+    toolDescription: "Use presets for fast results or switch to custom resolution when you need exact pixel control.",
+    modeSummary: "Choose between dedicated upscaling and downscaling workflows on one page.",
+    secondaryBenefit:
+      "Lower scaling mode reduces oversized assets for better page speed, lighter uploads, and healthier Core Web Vitals.",
+    ctaLabel: "Upload and resize"
+  },
+  upscale: {
+    lockedMode: "upscale",
+    heroTitle: "AI Image Upscaler Online for Sharper High-Resolution Results",
+    heroDescription:
+      "Upscale image online with AI-guided detail recovery for portraits, products, social posts, and low-resolution photos. Increase resolution, reduce blur, and download a cleaner JPG, PNG, or WEBP result.",
+    benefitIntro:
+      "Built for users who need a dedicated AI image upscaler instead of a mixed resizing page.",
+    benefits: [
+      "Upscale low-resolution images with cleaner edges and more natural-looking detail.",
+      "Improve clarity in portraits, product photos, thumbnails, and social media assets.",
+      "Use 2x, 4x, or custom dimensions for exact high-resolution output."
+    ],
+    quickLinks: [
+      { label: "AI Image Downscaler", href: "/ai-image-downscaler" },
+      { label: "Image to 50KB", href: "/image-to-50kb" },
+      { label: "Compress Image to 100KB", href: "/compress-image-100kb" }
+    ],
+    toolTitle: "AI image upscaler tool",
+    toolDescription: "Choose 2x, 4x, or a custom resolution to enlarge images without the flat look of a basic resize.",
+    modeSummary: "Dedicated upscale workflow for sharper enlargement and cleaner detail recovery.",
+    secondaryBenefit:
+      "Dedicated upscaling keeps the workflow focused on visual quality while still preserving fast previews and lightweight UI behavior.",
+    ctaLabel: "Upload and upscale"
+  },
+  downscale: {
+    lockedMode: "downscale",
+    heroTitle: "AI Image Downscaler Online to Reduce Size Without Losing Quality",
+    heroDescription:
+      "Downscale image online to reduce resolution or file size while keeping text readable, edges clean, and colors balanced. Ideal for web uploads, marketplace images, and faster-loading assets.",
+    benefitIntro:
+      "Built for users who need a dedicated image size reducer and lower scaling workflow with better control over output size.",
+    benefits: [
+      "Downscale large photos intelligently for web, marketplaces, forms, and faster pages.",
+      "Reduce image dimensions or target KB size while preserving readability and edges.",
+      "Use 50%, 25%, custom resolution, or target KB exports for upload-ready files."
+    ],
+    quickLinks: [
+      { label: "AI Image Upscaler", href: "/ai-image-upscaler" },
+      { label: "Image to 20KB", href: "/image-to-20kb" },
+      { label: "Image to 50KB", href: "/image-to-50kb" }
+    ],
+    toolTitle: "AI image downscaler tool",
+    toolDescription: "Choose 50%, 25%, a custom resolution, or a target KB workflow for smaller files with cleaner detail retention.",
+    modeSummary: "Dedicated downscale workflow for lighter uploads and faster delivery.",
+    secondaryBenefit:
+      "Lower scaling mode reduces oversized assets for better page speed, lighter uploads, and healthier Core Web Vitals.",
+    ctaLabel: "Upload and downscale"
+  }
+};
+
+function resolveVariant() {
+  if (typeof window === "undefined") return "both";
+  const path = window.location.pathname.toLowerCase();
+  if (path.includes("ai-image-upscaler")) return "upscale";
+  if (path.includes("ai-image-downscaler")) return "downscale";
+  return "both";
+}
+
 function SparkIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -192,9 +265,11 @@ function PreviewCard({ title, imageUrl, alt, meta, emptyCopy }) {
 }
 
 export default function AiImageScalerPage() {
+  const variant = useMemo(() => resolveVariant(), []);
+  const variantConfig = VARIANT_CONFIG[variant] || VARIANT_CONFIG.both;
   const [file, setFile] = useState(null);
-  const [mode, setMode] = useState("upscale");
-  const [preset, setPreset] = useState("2x");
+  const [mode, setMode] = useState(variantConfig.lockedMode || "upscale");
+  const [preset, setPreset] = useState(variantConfig.lockedMode === "downscale" ? "50" : "2x");
   const [customWidth, setCustomWidth] = useState("");
   const [customHeight, setCustomHeight] = useState("");
   const [targetKb, setTargetKb] = useState("150");
@@ -202,6 +277,7 @@ export default function AiImageScalerPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const activeMode = variantConfig.lockedMode || mode;
 
   const beforePreviewUrl = useMemo(() => (file ? fileToObjectUrl(file) : ""), [file]);
 
@@ -216,6 +292,18 @@ export default function AiImageScalerPage() {
     return () => URL.revokeObjectURL(result.previewUrl);
   }, [result]);
 
+  useEffect(() => {
+    if (variantConfig.lockedMode === "upscale") {
+      setMode("upscale");
+      setPreset((current) => (["2x", "4x", "custom"].includes(current) ? current : "2x"));
+      return;
+    }
+    if (variantConfig.lockedMode === "downscale") {
+      setMode("downscale");
+      setPreset((current) => (["50", "25", "custom"].includes(current) ? current : "50"));
+    }
+  }, [variantConfig.lockedMode]);
+
   async function handleProcess() {
     if (!file || busy) return;
     setBusy(true);
@@ -223,11 +311,11 @@ export default function AiImageScalerPage() {
     try {
       const processed = await processAiScale({
         file,
-        mode,
+        mode: activeMode,
         preset,
         customWidth,
         customHeight,
-        targetKb: mode === "downscale" ? targetKb : "",
+        targetKb: activeMode === "downscale" ? targetKb : "",
         outputMimeType
       });
 
@@ -245,10 +333,10 @@ export default function AiImageScalerPage() {
   function handleDownload() {
     if (!result || !file) return;
     const base = file.name.replace(/\.[^.]+$/, "") || "scaled-image";
-    downloadProcessedBlob(result.blob, `${base}-${mode}`, result.outputExtension);
+    downloadProcessedBlob(result.blob, `${base}-${activeMode}`, result.outputExtension);
   }
 
-  const schemaJson = useMemo(() => JSON.stringify(buildAiImageScalerSchema()), []);
+  const schemaJson = useMemo(() => JSON.stringify(buildAiImageScalerSchema(variant)), [variant]);
 
   return (
     <>
@@ -260,9 +348,9 @@ export default function AiImageScalerPage() {
           <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">{landingCopy.eyebrow}</p>
-              <h1 className="mt-4 max-w-3xl text-slate-950">{landingCopy.heroTitle}</h1>
-              <p className="mt-5 max-w-2xl text-base text-slate-600 md:text-lg">{landingCopy.heroDescription}</p>
-              <p className="mt-4 max-w-2xl text-sm text-slate-500">{landingCopy.benefitIntro}</p>
+              <h1 className="mt-4 max-w-3xl text-slate-950">{variantConfig.heroTitle}</h1>
+              <p className="mt-5 max-w-2xl text-base text-slate-600 md:text-lg">{variantConfig.heroDescription}</p>
+              <p className="mt-4 max-w-2xl text-sm text-slate-500">{variantConfig.benefitIntro}</p>
 
               <div className="mt-5 flex flex-wrap gap-2">
                 {TRUST_POINTS.map((item) => (
@@ -273,7 +361,7 @@ export default function AiImageScalerPage() {
               </div>
 
               <div className="mt-7 grid gap-3 sm:grid-cols-3">
-                {BENEFITS.map((benefit) => (
+                {variantConfig.benefits.map((benefit) => (
                   <div key={benefit} className="rounded-[1.5rem] border border-white/70 bg-white/90 p-4 shadow-sm backdrop-blur">
                     <p className="text-sm text-slate-700">{benefit}</p>
                   </div>
@@ -281,14 +369,14 @@ export default function AiImageScalerPage() {
               </div>
 
               <div className="mt-7 flex flex-wrap gap-3 text-sm text-slate-600">
-                <a href="#tool-interface" className="btn-primary">Upload and start scaling</a>
+                <a href="#tool-interface" className="btn-primary">{variantConfig.ctaLabel}</a>
                 <a href="#faq" className="btn-muted">Read FAQs</a>
               </div>
 
               <div className="mt-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Quick links</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {QUICK_LINKS.map((item) => (
+                  {variantConfig.quickLinks.map((item) => (
                     <a key={item.href} href={item.href} className="ai-chip">
                       {item.label}
                     </a>
@@ -303,7 +391,7 @@ export default function AiImageScalerPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Conversion-focused workflow</p>
-                    <p className="mt-1 text-xs text-slate-600">Upload once, compare before and after, then download the optimized result.</p>
+                    <p className="mt-1 text-xs text-slate-600">{variantConfig.modeSummary}</p>
                   </div>
                   <a href="#tool-interface" className="btn-primary">
                     Open controls
@@ -320,13 +408,13 @@ export default function AiImageScalerPage() {
               <div>
                 <h2 id="retention-links-heading">Need a different image optimization workflow?</h2>
                 <p className="mt-2 max-w-2xl text-sm text-slate-600">
-                  Users who need strict upload sizes or lighter web assets can continue into these related tools without leaving the image workflow.
+                  Users who need adjacent image workflows can continue into these related tools without leaving the image optimization path.
                 </p>
               </div>
               <a href="/?tab=all#pan-tool-suite" className="btn-muted">See all image tools</a>
             </div>
             <div className="mt-5 grid gap-4 md:grid-cols-3">
-              {QUICK_LINKS.map((item) => (
+              {variantConfig.quickLinks.map((item) => (
                 <a key={item.href} href={item.href} className="tool-card">
                   <h3 className="text-slate-950">{item.label}</h3>
                   <p className="mt-2 text-sm text-slate-600">Open a more specific image optimization path for exact size targets or lighter delivery.</p>
@@ -346,7 +434,7 @@ export default function AiImageScalerPage() {
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <h3>Cleaner web delivery</h3>
-                <p className="mt-2 text-sm text-slate-600">Lower scaling mode reduces oversized assets for better page speed, lighter uploads, and healthier Core Web Vitals.</p>
+                <p className="mt-2 text-sm text-slate-600">{variantConfig.secondaryBenefit}</p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <h3>Conversion-focused workflow</h3>
@@ -360,9 +448,9 @@ export default function AiImageScalerPage() {
           <div className="panel ai-tool-panel">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h2 id="tool-interface-heading">AI upper scaling and AI lower scaling tool</h2>
+                <h2 id="tool-interface-heading">{variantConfig.toolTitle}</h2>
                 <p className="mt-2 max-w-2xl text-sm text-slate-600">
-                  Use presets for fast results or switch to custom resolution when you need exact pixel control.
+                  {variantConfig.toolDescription}
                 </p>
                 <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
                   Primary conversion goal: maximize uploads and completed downloads
@@ -375,35 +463,37 @@ export default function AiImageScalerPage() {
 
             <div className="mt-6 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
               <div className="space-y-4">
-                <div className="grid gap-3 md:grid-cols-2">
-                  <ModeCard
-                    active={mode === "upscale"}
-                    title="AI Upper Scaling"
-                    description="Upscale low resolution images with sharper detail and cleaner texture."
-                    icon={<SparkIcon />}
-                    onClick={() => {
-                      setMode("upscale");
-                      setPreset("2x");
-                    }}
-                  />
-                  <ModeCard
-                    active={mode === "downscale"}
-                    title="AI Lower Scaling"
-                    description="Reduce image dimensions or KB without flattening readability."
-                    icon={<ShrinkIcon />}
-                    onClick={() => {
-                      setMode("downscale");
-                      setPreset("50");
-                    }}
-                  />
-                </div>
+                {variant === "both" ? (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <ModeCard
+                      active={activeMode === "upscale"}
+                      title="AI Upper Scaling"
+                      description="Upscale low resolution images with sharper detail and cleaner texture."
+                      icon={<SparkIcon />}
+                      onClick={() => {
+                        setMode("upscale");
+                        setPreset("2x");
+                      }}
+                    />
+                    <ModeCard
+                      active={activeMode === "downscale"}
+                      title="AI Lower Scaling"
+                      description="Reduce image dimensions or KB without flattening readability."
+                      icon={<ShrinkIcon />}
+                      onClick={() => {
+                        setMode("downscale");
+                        setPreset("50");
+                      }}
+                    />
+                  </div>
+                ) : null}
 
                 <div className="rounded-[1.6rem] border border-slate-200 bg-slate-50 p-5">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Preset</p>
                       <div className="mt-2 flex flex-wrap gap-2">
-                        {(mode === "upscale"
+                        {(activeMode === "upscale"
                           ? [
                               { value: "2x", label: "2x" },
                               { value: "4x", label: "4x" },
@@ -448,7 +538,7 @@ export default function AiImageScalerPage() {
                       <input
                         type="number"
                         min="1"
-                        placeholder={mode === "upscale" ? "e.g. 2400" : "e.g. 1200"}
+                        placeholder={activeMode === "upscale" ? "e.g. 2400" : "e.g. 1200"}
                         value={customWidth}
                         onChange={(event) => setCustomWidth(event.target.value)}
                         className="ai-field mt-2"
@@ -459,7 +549,7 @@ export default function AiImageScalerPage() {
                       <input
                         type="number"
                         min="1"
-                        placeholder={mode === "upscale" ? "e.g. 1600" : "e.g. 800"}
+                        placeholder={activeMode === "upscale" ? "e.g. 1600" : "e.g. 800"}
                         value={customHeight}
                         onChange={(event) => setCustomHeight(event.target.value)}
                         className="ai-field mt-2"
@@ -467,7 +557,7 @@ export default function AiImageScalerPage() {
                     </label>
                   </div>
 
-                  {mode === "downscale" ? (
+                  {activeMode === "downscale" ? (
                     <div className="mt-4">
                       <label className="block">
                         <span className="text-sm font-medium text-slate-700">Target KB size</span>
@@ -488,7 +578,7 @@ export default function AiImageScalerPage() {
 
                   <div className="mt-5 flex flex-wrap gap-3">
                     <button type="button" onClick={handleProcess} disabled={!file || busy} className="btn-primary">
-                      {busy ? "Processing..." : mode === "upscale" ? "Upscale image" : "Downscale image"}
+                      {busy ? "Processing..." : activeMode === "upscale" ? "Upscale image" : "Downscale image"}
                     </button>
                     <button
                       type="button"
@@ -531,14 +621,14 @@ export default function AiImageScalerPage() {
                 <PreviewCard
                   title="Before"
                   imageUrl={beforePreviewUrl}
-                  alt={file ? `Original image before ${mode} for ${file.name}` : "Empty image upload state"}
+                  alt={file ? `Original image before ${activeMode} for ${file.name}` : "Empty image upload state"}
                   meta={file ? `${formatBytes(file.size)}` : ""}
                   emptyCopy="Upload an image to preview the source file here before running the scaler."
                 />
                 <PreviewCard
                   title="After"
                   imageUrl={result?.previewUrl}
-                  alt={file ? `After ${mode} preview for ${file.name}` : "Empty processed image state"}
+                  alt={file ? `After ${activeMode} preview for ${file.name}` : "Empty processed image state"}
                   meta={result ? `${result.width} x ${result.height} | ${formatBytes(result.blob.size)}` : ""}
                   emptyCopy="Your processed preview will appear here with updated dimensions and file size."
                 />
@@ -672,7 +762,7 @@ export default function AiImageScalerPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <a href="#tool-interface" className="btn-primary">Upload and resize</a>
+              <a href="#tool-interface" className="btn-primary">{variantConfig.ctaLabel}</a>
               <a href="/?tab=all#pan-tool-suite" className="btn-muted">Browse all tools</a>
             </div>
           </div>

@@ -27,11 +27,25 @@ export const tools = [
     }
   },
   {
-    id: "ai-image-scaler",
-    title: "AI Image Scaler",
-    description: "Upscale or downscale JPG, PNG, and WEBP images with quality-focused smart resizing.",
+    id: "ai-image-upscaler",
+    title: "AI Image Upscaler",
+    description: "Upscale JPG, PNG, and WEBP images with sharper details, cleaner textures, and high-resolution output.",
     categoryId: "intelligence",
-    href: "/ai-image-scaler",
+    href: "/ai-image-upscaler",
+    icon: {
+      viewBox: "0 0 24 24",
+      paths: [
+        { d: "M8 4H4v4M16 4h4v4M8 20H4v-4M20 16v4h-4", strokeWidth: 1.8, fill: "none" },
+        { d: "M4 20l6-6M20 20l-6-6M12 6v12M8.5 9.5L12 6l3.5 3.5", strokeWidth: 1.8, fill: "none" }
+      ]
+    }
+  },
+  {
+    id: "ai-image-downscaler",
+    title: "AI Image Downscaler",
+    description: "Reduce image dimensions or KB size while preserving readability, edges, and overall quality.",
+    categoryId: "intelligence",
+    href: "/ai-image-downscaler",
     icon: {
       viewBox: "0 0 24 24",
       paths: [

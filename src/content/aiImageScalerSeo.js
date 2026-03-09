@@ -103,8 +103,48 @@ export const landingCopy = {
     "Use the smart resizer now to enlarge low-quality photos or make oversized images lighter for web, forms, listings, and faster page delivery."
 };
 
-export function buildAiImageScalerSchema() {
-  const pageUrl = "https://filewalatool.com/ai-image-scaler";
+export function buildAiImageScalerSchema(variant = "both") {
+  const pageUrlMap = {
+    upscale: "https://filewalatool.com/ai-image-upscaler",
+    downscale: "https://filewalatool.com/ai-image-downscaler",
+    both: "https://filewalatool.com/ai-image-scaler"
+  };
+  const titleMap = {
+    upscale: "AI Image Upscaler Online Free: Upscale Image Without Losing Quality",
+    downscale: "AI Image Downscaler Online: Reduce Image Size Without Losing Quality",
+    both: seoTitleOptions[0]
+  };
+  const descriptionMap = {
+    upscale:
+      "Upscale image online with AI-guided enhancement for sharper details, cleaner textures, and higher-resolution output in JPG, PNG, or WEBP.",
+    downscale:
+      "Downscale image online to reduce dimensions or file size while preserving edges, readable text, and balanced detail in JPG, PNG, or WEBP.",
+    both: metaDescriptionOptions[0]
+  };
+  const featureMap = {
+    upscale: [
+      "AI image upscaler",
+      "2x and 4x enlargement",
+      "Custom resolution resize",
+      "JPG PNG WEBP support",
+      "Preview before download"
+    ],
+    downscale: [
+      "AI image downscaler",
+      "50% and 25% reduction",
+      "Target KB export",
+      "Custom resolution resize",
+      "JPG PNG WEBP support"
+    ],
+    both: [
+      "AI image upscaler",
+      "AI lower scaling",
+      "Custom resolution resize",
+      "Target KB export",
+      "JPG PNG WEBP support"
+    ]
+  };
+  const pageUrl = pageUrlMap[variant] || pageUrlMap.both;
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -112,8 +152,8 @@ export function buildAiImageScalerSchema() {
         "@type": "WebPage",
         "@id": `${pageUrl}#webpage`,
         url: pageUrl,
-        name: seoTitleOptions[0],
-        description: metaDescriptionOptions[0],
+        name: titleMap[variant] || titleMap.both,
+        description: descriptionMap[variant] || descriptionMap.both,
         inLanguage: "en",
         isPartOf: {
           "@id": "https://filewalatool.com/#website"
@@ -122,7 +162,12 @@ export function buildAiImageScalerSchema() {
       {
         "@type": "SoftwareApplication",
         "@id": `${pageUrl}#software`,
-        name: "AI Image Scaler",
+        name:
+          variant === "upscale"
+            ? "AI Image Upscaler"
+            : variant === "downscale"
+              ? "AI Image Downscaler"
+              : "AI Image Scaler",
         applicationCategory: "MultimediaApplication",
         operatingSystem: "Web",
         offers: {
@@ -130,15 +175,9 @@ export function buildAiImageScalerSchema() {
           price: "0",
           priceCurrency: "USD"
         },
-        description: metaDescriptionOptions[1],
+        description: descriptionMap[variant] || descriptionMap.both,
         url: pageUrl,
-        featureList: [
-          "AI image upscaler",
-          "AI lower scaling",
-          "Custom resolution resize",
-          "Target KB export",
-          "JPG PNG WEBP support"
-        ]
+        featureList: featureMap[variant] || featureMap.both
       },
       {
         "@type": "FAQPage",
