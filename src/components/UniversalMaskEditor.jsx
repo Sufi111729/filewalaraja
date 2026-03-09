@@ -159,11 +159,18 @@ export default function UniversalMaskEditor({
     pointerStateRef.current = { drawing: false, panning: false, changed: false, lastClient: null };
   }
 
+  const cursorClass =
+    activeTool === "pan"
+      ? "cursor-grab active:cursor-grabbing"
+      : previewMode === "before"
+        ? "cursor-default"
+        : "cursor-crosshair";
+
   return (
     <div ref={wrapperRef} className="universal-editor-stage">
       <canvas
         ref={canvasRef}
-        className="h-full w-full touch-none"
+        className={`h-full w-full touch-none ${cursorClass}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
