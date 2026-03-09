@@ -14,7 +14,13 @@
 /compress-image-50kb /image-to-50kb.html 200
 /compress-image-20kb /image-to-20kb.html 200
 /compress-image-100kb /compress-image-100kb.html 200
+/ai-image-scaler /ai-image-scaler.html 200
+/ai-image-upscaler /ai-image-upscaler.html 200
+/ai-image-downscaler /ai-image-downscaler.html 200
 /compress-image-100kb.html /compress-image-100kb 301
+/ai-image-scaler.html /ai-image-scaler 301
+/ai-image-upscaler.html /ai-image-upscaler 301
+/ai-image-downscaler.html /ai-image-downscaler 301
 /pdf-to-word /index.html 200
 /image-resize /pan-editor.html 200
 /image-compress /kb-editor.html 200
